@@ -55,32 +55,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_emergency_card: {
-        Args: { _card_id: string }
-        Returns: {
-          allergies: string[]
-          blood_group: string
-          card_id: string
-          conditions: string[]
-          contacts: Json
-          holder_name: string
-          medications: string[]
-          updated_at: string
-        }[]
-      }
-      set_emergency_card: {
-        Args: {
-          _allergies: string[]
-          _blood_group: string
-          _card_id: string
-          _conditions: string[]
-          _contacts: Json
-          _edit_token_hash: string
-          _holder_name: string
-          _medications: string[]
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
