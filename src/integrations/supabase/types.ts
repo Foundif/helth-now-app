@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      emergency_cards: {
+        Row: {
+          allergies: string[]
+          blood_group: string
+          card_id: string
+          conditions: string[]
+          contacts: Json
+          edit_token_hash: string
+          holder_name: string
+          medications: string[]
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string[]
+          blood_group: string
+          card_id: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash: string
+          holder_name: string
+          medications?: string[]
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string[]
+          blood_group?: string
+          card_id?: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash?: string
+          holder_name?: string
+          medications?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
