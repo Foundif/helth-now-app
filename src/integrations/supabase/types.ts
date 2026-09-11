@@ -14,13 +14,73 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      emergency_cards: {
+        Row: {
+          allergies: string[]
+          blood_group: string
+          card_id: string
+          conditions: string[]
+          contacts: Json
+          edit_token_hash: string
+          holder_name: string
+          medications: string[]
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string[]
+          blood_group: string
+          card_id: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash: string
+          holder_name: string
+          medications?: string[]
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string[]
+          blood_group?: string
+          card_id?: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash?: string
+          holder_name?: string
+          medications?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_emergency_card: {
+        Args: { _card_id: string }
+        Returns: {
+          allergies: string[]
+          blood_group: string
+          card_id: string
+          conditions: string[]
+          contacts: Json
+          holder_name: string
+          medications: string[]
+          updated_at: string
+        }[]
+      }
+      set_emergency_card: {
+        Args: {
+          _allergies: string[]
+          _blood_group: string
+          _card_id: string
+          _conditions: string[]
+          _contacts: Json
+          _edit_token_hash: string
+          _holder_name: string
+          _medications: string[]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
