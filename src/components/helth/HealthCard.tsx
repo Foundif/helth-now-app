@@ -1,10 +1,19 @@
 import { Cross, Wifi } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Member } from "@/lib/helth-store";
+import { cardUrl } from "@/lib/card-utils";
 
 export function HealthCard({ member }: { member: Member }) {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(
-    `https://gethelth.com/${member.cardId}`,
-  )}`;
+  const [link, setLink] = useState("");
+
+  useEffect(() => {
+    setLink(cardUrl(member.cardId));
+  }, [member.cardId]);
+
+  const qrUrl = link
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(link)}`
+    : "";
+  const host = link ? new URL(link).host : "";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -33,9 +42,20 @@ export function HealthCard({ member }: { member: Member }) {
           <p className="text-[8px] font-bold text-muted-foreground">
             SCAN IN <span className="text-primary">EMERGENCY</span>
           </p>
-          <img src={qrUrl} alt={`QR code for card ${member.cardId}`} className="mx-auto w-full" />
-          <p className="text-[8px] text-muted-foreground">
-            gethelth.com/<span className="font-semibold text-primary">{member.cardId}</span>
+          <div className="mx-auto aspect-square w-full">
+            {qrUrl ? (
+              <img
+                src={qrUrl}
+                alt={`QR code linking to emergency card ${member.cardId}`}
+                className="size-full"
+                loading="lazy"
+              />
+            ) : (
+              <div className="size-full animate-pulse rounded bg-muted" />
+            )}
+          </div>
+          <p className="truncate text-[8px] text-muted-foreground">
+            {host}/<span className="font-semibold text-primary">{member.cardId}</span>
           </p>
         </div>
       </div>

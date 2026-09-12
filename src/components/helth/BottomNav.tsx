@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Home, BookMarked, Settings } from "lucide-react";
+import { Home, BookMarked, ScanLine, Settings } from "lucide-react";
 
 const items = [
   { to: "/", label: "Home", icon: Home },
   { to: "/locker", label: "Locker", icon: BookMarked },
+  { to: "/scan", label: "Scan", icon: ScanLine },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
