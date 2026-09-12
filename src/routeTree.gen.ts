@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LockerRouteImport } from './routes/locker'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ScanRouteImport } from './routes/scan'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
 
@@ -36,6 +37,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
 }
@@ -69,22 +77,36 @@ export interface FileRoutesById {
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/locker' | '/onboarding' | '/profile' | '/settings' | '/card/$cardId'
+    | '/'
+    | '/locker'
+    | '/onboarding'
+    | '/profile'
+    | '/scan'
+    | '/settings'
+    | '/card/$cardId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/locker' | '/onboarding' | '/profile' | '/settings' | '/card/$cardId'
+    | '/'
+    | '/locker'
+    | '/onboarding'
+    | '/profile'
+    | '/scan'
+    | '/settings'
+    | '/card/$cardId'
   id:
     | '__root__'
     | '/'
     | '/locker'
     | '/onboarding'
     | '/profile'
+    | '/scan'
     | '/settings'
     | '/card/$cardId'
   fileRoutesById: FileRoutesById
@@ -94,6 +116,7 @@ export interface RootRouteChildren {
   LockerRoute: typeof LockerRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   CardCardIdRoute: typeof CardCardIdRoute
 }
@@ -128,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -150,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   LockerRoute: LockerRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   CardCardIdRoute: CardCardIdRoute,
 }
