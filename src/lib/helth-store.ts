@@ -80,15 +80,26 @@ let state: HelthState = defaultState;
 let hydrated = false;
 const listeners = new Set<() => void>();
 
+function newToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function load(): HelthState {
   if (typeof window === "undefined") return defaultState;
+  let loaded = defaultState;
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return defaultState;
-    return { ...defaultState, ...(JSON.parse(raw) as HelthState) };
+    if (raw) loaded = { ...defaultState, ...(JSON.parse(raw) as HelthState) };
   } catch {
-    return defaultState;
+    loaded = defaultState;
   }
+  if (!loaded.editToken) {
+    loaded = { ...loaded, editToken: newToken() };
+    window.localStorage.setItem(KEY, JSON.stringify(loaded));
+  }
+  return loaded;
 }
 
 function emit() {
@@ -122,8 +133,20 @@ export function useHelth() {
   return { state: snapshot, update };
 }
 
+const fallbackMember: Member = {
+  id: "m1",
+  name: "New member",
+  emoji: "🧑",
+  cardId: "ETH0001",
+  bloodGroup: "O+",
+  allergies: [],
+  medications: [],
+  conditions: [],
+  contacts: [],
+};
+
 export function activeMember(s: HelthState): Member {
-  return s.members.find((m) => m.id === s.activeMemberId) ?? s.members[0];
+  return s.members.find((m) => m.id === s.activeMemberId) ?? s.members[0] ?? fallbackMember;
 }
 
 export function memberByCard(s: HelthState, cardId: string): Member | undefined {
