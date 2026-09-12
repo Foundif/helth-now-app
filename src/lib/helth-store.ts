@@ -27,6 +27,7 @@ export type HelthState = {
   members: Member[];
   documents: HealthDoc[];
   insuranceActivated: boolean;
+  editToken: string;
 };
 
 const KEY = "helth-state-v1";
@@ -72,6 +73,7 @@ const defaultState: HelthState = {
     },
   ],
   insuranceActivated: false,
+  editToken: "",
 };
 
 let state: HelthState = defaultState;
