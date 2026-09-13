@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ScanLine, Bike } from "lucide-react";
+import { Check } from "lucide-react";
 import { HealthCard } from "@/components/helth/HealthCard";
-import { useHelth, activeMember } from "@/lib/helth-store";
+import { useHelth } from "@/lib/helth-store";
+import accidentAsset from "@/assets/onboarding-accident.png.asset.json";
+import scanAsset from "@/assets/onboarding-scan.png.asset.json";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -25,12 +27,11 @@ export const Route = createFileRoute("/onboarding")({
 function Onboarding() {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
-  const { state, update } = useHelth();
-  const member = activeMember(state);
+  const { update } = useHelth();
 
   const finish = () => {
     update((s) => ({ ...s, onboarded: true }));
-    navigate({ to: "/" });
+    navigate({ to: "/auth" });
   };
 
   return (
@@ -42,9 +43,11 @@ function Onboarding() {
       <div className="flex flex-1 flex-col justify-center gap-8 py-6">
         {step === 0 && (
           <>
-            <div className="flex items-center justify-center rounded-3xl bg-muted py-12">
-              <Bike className="size-28 text-muted-foreground" strokeWidth={1.2} />
-            </div>
+            <img
+              src={accidentAsset.url}
+              alt="Motorcyclist lying on the road beside a fallen bike after a crash"
+              className="mx-auto h-56 w-full object-contain"
+            />
             <div className="rounded-xl border border-primary/25 bg-accent px-4 py-4 text-center">
               <p className="text-sm font-bold text-primary">ACCIDENT AT JUNCTION</p>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -65,9 +68,11 @@ function Onboarding() {
 
         {step === 1 && (
           <>
-            <div className="flex items-center justify-center rounded-3xl bg-muted py-12">
-              <ScanLine className="size-28 text-muted-foreground" strokeWidth={1.2} />
-            </div>
+            <img
+              src={scanAsset.url}
+              alt="Phone scanning the QR code on a Helth emergency health card"
+              className="mx-auto h-56 w-full object-contain"
+            />
             <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center text-muted-foreground">
               Scan takes 5 seconds. No app needed. No login. Works on any phone.
             </div>
@@ -85,7 +90,7 @@ function Onboarding() {
 
         {step === 2 && (
           <>
-            <HealthCard member={member} />
+            <HealthCard cardId="HELTH001" name="Your name" bloodGroup="B-" />
             <div className="space-y-3">
               {["Emergency Health Card", "AI Summary Of Your Health"].map((t) => (
                 <div key={t} className="flex items-center gap-3 rounded-xl bg-muted px-4 py-4">
@@ -96,7 +101,7 @@ function Onboarding() {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight">
-                Your card. Your family. Protected.
+                Your card. Your details. Protected.
               </h1>
               <p className="mt-3 text-muted-foreground">
                 Set up takes 2 minutes. Your emergency page goes live instantly.
@@ -110,8 +115,8 @@ function Onboarding() {
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className={`h-1.5 rounded-full transition-all ${
-              i === step ? "w-8 bg-primary" : "w-8 bg-muted"
+            className={`h-1.5 w-8 rounded-full transition-all ${
+              i === step ? "bg-primary" : "bg-muted"
             }`}
           />
         ))}
