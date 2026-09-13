@@ -24,17 +24,19 @@ export type Database = {
           edit_token_hash: string
           holder_name: string
           medications: string[]
+          phone: string | null
           updated_at: string
         }
         Insert: {
           allergies?: string[]
-          blood_group: string
+          blood_group?: string
           card_id: string
           conditions?: string[]
           contacts?: Json
-          edit_token_hash: string
-          holder_name: string
+          edit_token_hash?: string
+          holder_name?: string
           medications?: string[]
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -46,9 +48,48 @@ export type Database = {
           edit_token_hash?: string
           holder_name?: string
           medications?: string[]
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      health_documents: {
+        Row: {
+          card_id: string
+          created_at: string
+          doc_type: string
+          id: string
+          name: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          doc_type: string
+          id?: string
+          name: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          name?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_documents_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
       }
     }
     Views: {
