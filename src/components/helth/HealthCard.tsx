@@ -1,14 +1,21 @@
 import { Cross, Wifi } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Member } from "@/lib/helth-store";
 import { cardUrl } from "@/lib/card-utils";
 
-export function HealthCard({ member }: { member: Member }) {
+export function HealthCard({
+  cardId,
+  name,
+  bloodGroup,
+}: {
+  cardId: string;
+  name: string;
+  bloodGroup: string;
+}) {
   const [link, setLink] = useState("");
 
   useEffect(() => {
-    setLink(cardUrl(member.cardId));
-  }, [member.cardId]);
+    setLink(cardUrl(cardId));
+  }, [cardId]);
 
   const qrUrl = link
     ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(link)}`
@@ -34,9 +41,9 @@ export function HealthCard({ member }: { member: Member }) {
       <div className="flex">
         <div className="flex-1 bg-primary p-3 text-primary-foreground">
           <p className="text-[9px] opacity-80">Card Holder's Name:</p>
-          <p className="text-sm font-bold">{member.name}</p>
+          <p className="text-sm font-bold">{name || "Add your name"}</p>
           <p className="mt-1 text-[9px] opacity-80">Blood Group:</p>
-          <p className="text-4xl leading-none font-extrabold">{member.bloodGroup}</p>
+          <p className="text-4xl leading-none font-extrabold">{bloodGroup || "—"}</p>
         </div>
         <div className="w-[38%] p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground">
@@ -46,7 +53,7 @@ export function HealthCard({ member }: { member: Member }) {
             {qrUrl ? (
               <img
                 src={qrUrl}
-                alt={`QR code linking to emergency card ${member.cardId}`}
+                alt={`QR code linking to emergency card ${cardId}`}
                 className="size-full"
                 loading="lazy"
               />
@@ -55,7 +62,7 @@ export function HealthCard({ member }: { member: Member }) {
             )}
           </div>
           <p className="truncate text-[8px] text-muted-foreground">
-            {host}/<span className="font-semibold text-primary">{member.cardId}</span>
+            {host}/<span className="font-semibold text-primary">{cardId}</span>
           </p>
         </div>
       </div>
