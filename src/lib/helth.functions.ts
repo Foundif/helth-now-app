@@ -1,0 +1,285 @@
+import { createServerFn } from "@tanstack/react-start";
+
+export type Contact = { id: string; name: string; phone: string; relation: string };
+
+export type Profile = {
+  cardId: string;
+  phone: string;
+  name: string;
+  bloodGroup: string;
+  allergies: string[];
+  medications: string[];
+  conditions: string[];
+  contacts: Contact[];
+  updatedAt: string;
+};
+
+export type StoredDoc = {
+  id: string;
+  name: string;
+  docType: string;
+  sizeBytes: number;
+  createdAt: string;
+  url: string | null;
+};
+
+const bloodGroups = new Set(["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", ""]);
+
+export function normalizePhone(raw: string) {
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  const digits = cleaned.replace(/\D/g, "");
+  if (digits.length < 8 || digits.length > 15) throw new Error("Enter a valid phone number");
+  return cleaned.startsWith("+") ? `+${digits}` : digits;
+}
+
+type Row = {
+  card_id: string;
+  phone: string | null;
+  holder_name: string;
+  blood_group: string;
+  allergies: string[];
+  medications: string[];
+  conditions: string[];
+  contacts: unknown;
+  updated_at: string;
+};
+
+function toProfile(row: Row): Profile {
+  return {
+    cardId: row.card_id,
+    phone: row.phone ?? "",
+    name: row.holder_name,
+    bloodGroup: row.blood_group,
+    allergies: row.allergies ?? [],
+    medications: row.medications ?? [],
+    conditions: row.conditions ?? [],
+    contacts: Array.isArray(row.contacts) ? (row.contacts as Contact[]) : [],
+    updatedAt: row.updated_at,
+  };
+}
+
+const COLUMNS =
+  "card_id, phone, holder_name, blood_group, allergies, medications, conditions, contacts, updated_at";
+
+async function admin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+/** Verifies the caller owns this card (phone number acts as the credential). */
+async function requireOwner(cardId: string, phone: string) {
+  const db = await admin();
+  const normalized = normalizePhone(phone);
+  const { data, error } = await db
+    .from("emergency_cards")
+    .select(COLUMNS)
+    .eq("card_id", cardId.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw new Error("Could not reach your card right now");
+  if (!data || data.phone !== normalized) throw new Error("You are not signed in to this card");
+  return { db, row: data as Row, normalized };
+}
+
+export const signInWithPhone = createServerFn({ method: "POST" })
+  .inputValidator((input: { phone: string }) => ({ phone: normalizePhone(input.phone) }))
+  .handler(async ({ data }): Promise<Profile> => {
+    const db = await admin();
+    const existing = await db
+      .from("emergency_cards")
+      .select(COLUMNS)
+      .eq("phone", data.phone)
+      .maybeSingle();
+    if (existing.error) throw new Error("Could not sign you in right now");
+    if (existing.data) return toProfile(existing.data as Row);
+
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const last = await db
+        .from("emergency_cards")
+        .select("card_id")
+        .like("card_id", "HELTH%")
+        .order("card_id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const lastNumber = Number(last.data?.card_id?.replace("HELTH", "") ?? 0) || 0;
+      const cardId = `HELTH${String(lastNumber + 1 + attempt).padStart(3, "0")}`;
+      const inserted = await db
+        .from("emergency_cards")
+        .insert({
+          card_id: cardId,
+          phone: data.phone,
+          holder_name: "",
+          blood_group: "",
+          allergies: [],
+          medications: [],
+          conditions: [],
+          contacts: [],
+          edit_token_hash: "",
+        })
+        .select(COLUMNS)
+        .maybeSingle();
+      if (!inserted.error && inserted.data) return toProfile(inserted.data as Row);
+      if (inserted.error && !inserted.error.message.includes("duplicate")) {
+        throw new Error("Could not create your card");
+      }
+    }
+    throw new Error("Could not create your card, please try again");
+  });
+
+export const getMyProfile = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string }) => input)
+  .handler(async ({ data }): Promise<Profile> => {
+    const { row } = await requireOwner(data.cardId, data.phone);
+    return toProfile(row);
+  });
+
+export type ProfileInput = {
+  cardId: string;
+  phone: string;
+  name: string;
+  bloodGroup: string;
+  allergies: string[];
+  medications: string[];
+  conditions: string[];
+  contacts: Contact[];
+};
+
+export const saveMyProfile = createServerFn({ method: "POST" })
+  .inputValidator((input: ProfileInput) => {
+    const name = input.name.trim();
+    if (!name || name.length > 100) throw new Error("Enter a valid name");
+    if (!bloodGroups.has(input.bloodGroup)) throw new Error("Select a valid blood group");
+    const list = (values: string[]) =>
+      values.map((v) => v.trim()).filter(Boolean).slice(0, 20);
+    return {
+      ...input,
+      name,
+      allergies: list(input.allergies),
+      medications: list(input.medications),
+      conditions: list(input.conditions),
+      contacts: input.contacts
+        .slice(0, 5)
+        .map((c) => ({
+          id: c.id.slice(0, 40),
+          name: c.name.trim().slice(0, 100),
+          phone: c.phone.trim().slice(0, 30),
+          relation: (c.relation || "Contact").trim().slice(0, 50),
+        }))
+        .filter((c) => c.name && /^[+()\d\s-]{7,30}$/.test(c.phone)),
+    };
+  })
+  .handler(async ({ data }): Promise<Profile> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: updated, error } = await db
+      .from("emergency_cards")
+      .update({
+        holder_name: data.name,
+        blood_group: data.bloodGroup,
+        allergies: data.allergies,
+        medications: data.medications,
+        conditions: data.conditions,
+        contacts: data.contacts,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("card_id", row.card_id)
+      .select(COLUMNS)
+      .maybeSingle();
+    if (error || !updated) throw new Error("Could not save your details");
+    return toProfile(updated as Row);
+  });
+
+export const listDocuments = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string }) => input)
+  .handler(async ({ data }): Promise<StoredDoc[]> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: docs, error } = await db
+      .from("health_documents")
+      .select("id, name, doc_type, size_bytes, storage_path, created_at")
+      .eq("card_id", row.card_id)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error("Could not load your documents");
+    return Promise.all(
+      (docs ?? []).map(async (doc) => {
+        const signed = await db.storage
+          .from("health-docs")
+          .createSignedUrl(doc.storage_path, 60 * 60);
+        return {
+          id: doc.id,
+          name: doc.name,
+          docType: doc.doc_type,
+          sizeBytes: Number(doc.size_bytes),
+          createdAt: doc.created_at,
+          url: signed.data?.signedUrl ?? null,
+        };
+      }),
+    );
+  });
+
+export const uploadDocument = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      cardId: string;
+      phone: string;
+      name: string;
+      docType: string;
+      contentType: string;
+      dataBase64: string;
+    }) => {
+      if (!input.name.trim()) throw new Error("Choose a file first");
+      if (input.dataBase64.length > 14_000_000) throw new Error("File is larger than 10 MB");
+      return input;
+    },
+  )
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const binary = atob(data.dataBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const safeName = data.name.replace(/[^\w.\-]+/g, "_").slice(0, 80);
+    const path = `${row.card_id}/${Date.now()}-${safeName}`;
+    const upload = await db.storage
+      .from("health-docs")
+      .upload(path, bytes, { contentType: data.contentType || "application/octet-stream" });
+    if (upload.error) throw new Error("Could not upload this file");
+    const { error } = await db.from("health_documents").insert({
+      card_id: row.card_id,
+      name: data.name.slice(0, 120),
+      doc_type: data.docType.slice(0, 40),
+      size_bytes: bytes.length,
+      storage_path: path,
+    });
+    if (error) throw new Error("Could not save this document");
+    return { ok: true };
+  });
+
+export const deleteDocument = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string; id: string }) => input)
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: doc } = await db
+      .from("health_documents")
+      .select("id, storage_path")
+      .eq("id", data.id)
+      .eq("card_id", row.card_id)
+      .maybeSingle();
+    if (!doc) throw new Error("Document not found");
+    await db.storage.from("health-docs").remove([doc.storage_path]);
+    const { error } = await db.from("health_documents").delete().eq("id", doc.id);
+    if (error) throw new Error("Could not delete this document");
+    return { ok: true };
+  });
+
+export const deleteAccount = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string }) => input)
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: docs } = await db
+      .from("health_documents")
+      .select("storage_path")
+      .eq("card_id", row.card_id);
+    if (docs?.length) {
+      await db.storage.from("health-docs").remove(docs.map((d) => d.storage_path));
+    }
+    const { error } = await db.from("emergency_cards").delete().eq("card_id", row.card_id);
+    if (error) throw new Error("Could not delete your card");
+    return { ok: true };
+  });
