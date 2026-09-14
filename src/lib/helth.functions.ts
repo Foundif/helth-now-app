@@ -23,7 +23,8 @@ export type StoredDoc = {
   url: string | null;
 };
 
-const bloodGroups = new Set(["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", ""]);
+export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
+const bloodGroups = new Set([...BLOOD_GROUPS, ""]);
 
 export function normalizePhone(raw: string) {
   const cleaned = raw.replace(/[^\d+]/g, "");
@@ -61,13 +62,13 @@ function toProfile(row: Row): Profile {
 const COLUMNS =
   "card_id, phone, holder_name, blood_group, allergies, medications, conditions, contacts, updated_at";
 
-async function admin() {
+export async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
 
 /** Verifies the caller owns this card (phone number acts as the credential). */
-async function requireOwner(cardId: string, phone: string) {
+export async function requireOwner(cardId: string, phone: string) {
   const db = await admin();
   const normalized = normalizePhone(phone);
   const { data, error } = await db
@@ -149,7 +150,10 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     if (!name || name.length > 100) throw new Error("Enter a valid name");
     if (!bloodGroups.has(input.bloodGroup)) throw new Error("Select a valid blood group");
     const list = (values: string[]) =>
-      values.map((v) => v.trim()).filter(Boolean).slice(0, 20);
+      values
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .slice(0, 20);
     return {
       ...input,
       name,

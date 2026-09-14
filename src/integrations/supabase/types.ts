@@ -91,6 +91,88 @@ export type Database = {
           },
         ]
       }
+      blood_donors: {
+        Row: {
+          active: boolean
+          blood_group: string
+          card_id: string
+          city: string
+          name: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          blood_group: string
+          card_id: string
+          city: string
+          name: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          blood_group?: string
+          card_id?: string
+          city?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blood_donors_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: true
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
+      blood_requests: {
+        Row: {
+          blood_group: string
+          card_id: string
+          city: string
+          created_at: string
+          hospital: string | null
+          id: string
+          notes: string | null
+          requester_name: string
+          status: string
+        }
+        Insert: {
+          blood_group: string
+          card_id: string
+          city: string
+          created_at?: string
+          hospital?: string | null
+          id?: string
+          notes?: string | null
+          requester_name: string
+          status?: string
+        }
+        Update: {
+          blood_group?: string
+          card_id?: string
+          city?: string
+          created_at?: string
+          hospital?: string | null
+          id?: string
+          notes?: string | null
+          requester_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blood_requests_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
