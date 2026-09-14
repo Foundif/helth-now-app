@@ -11,7 +11,7 @@ import {
   Sparkles,
   Pencil,
 } from "lucide-react";
-import { useHelth, memberByCard } from "@/lib/helth-store";
+import { useHelth } from "@/lib/helth-store";
 import { getEmergencyCard, type PublicEmergencyCard } from "@/lib/emergency-card.functions";
 import { getEmergencySummary } from "@/lib/ai-summary.functions";
 import { shareCard } from "@/lib/card-utils";
@@ -40,8 +40,7 @@ export const Route = createFileRoute("/card/$cardId")({
 function EmergencyPage() {
   const { cardId } = useParams({ from: "/card/$cardId" });
   const { state } = useHelth();
-  const localMember = memberByCard(state, cardId);
-  const isOwner = Boolean(localMember);
+  const isOwner = state.session?.cardId === cardId.toUpperCase();
 
   const cardQuery = useQuery({
     queryKey: ["emergency-card", cardId],
@@ -49,20 +48,7 @@ function EmergencyPage() {
     retry: 1,
   });
 
-  const card: PublicEmergencyCard | null =
-    cardQuery.data ??
-    (localMember
-      ? {
-          cardId: localMember.cardId,
-          holderName: localMember.name,
-          bloodGroup: localMember.bloodGroup,
-          allergies: localMember.allergies,
-          medications: localMember.medications,
-          conditions: localMember.conditions,
-          contacts: localMember.contacts,
-          updatedAt: new Date().toISOString(),
-        }
-      : null);
+  const card: PublicEmergencyCard | null = cardQuery.data ?? null;
 
   const summaryQuery = useQuery({
     queryKey: ["emergency-summary", card?.cardId, card?.updatedAt],
