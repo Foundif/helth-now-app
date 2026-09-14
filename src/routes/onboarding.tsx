@@ -43,11 +43,13 @@ function Onboarding() {
       <div className="flex flex-1 flex-col justify-center gap-8 py-6">
         {step === 0 && (
           <>
-            <img
-              src={accidentAsset.url}
-              alt="Motorcyclist lying on the road beside a fallen bike after a crash"
-              className="mx-auto h-56 w-full object-contain"
-            />
+            <div className="mx-auto w-full overflow-hidden rounded-3xl bg-muted shadow-sm">
+              <img
+                src={accidentAsset.url}
+                alt="Motorcyclist lying on the road beside a fallen bike after a crash"
+                className="h-56 w-full object-contain"
+              />
+            </div>
             <div className="rounded-xl border border-primary/25 bg-accent px-4 py-4 text-center">
               <p className="text-sm font-bold text-primary">ACCIDENT AT JUNCTION</p>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -68,11 +70,13 @@ function Onboarding() {
 
         {step === 1 && (
           <>
-            <img
-              src={scanAsset.url}
-              alt="Phone scanning the QR code on a Helth emergency health card"
-              className="mx-auto h-56 w-full object-contain"
-            />
+            <div className="mx-auto w-full overflow-hidden rounded-3xl bg-muted shadow-sm">
+              <img
+                src={scanAsset.url}
+                alt="Phone scanning the QR code on a Helth emergency health card"
+                className="h-56 w-full object-contain"
+              />
+            </div>
             <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center text-muted-foreground">
               Scan takes 5 seconds. No app needed. No login. Works on any phone.
             </div>
