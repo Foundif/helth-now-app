@@ -40,7 +40,6 @@ export const Route = createFileRoute("/card/$cardId")({
 function EmergencyPage() {
   const { cardId } = useParams({ from: "/card/$cardId" });
   const { state } = useHelth();
-  const localMember = null;
   const isOwner = state.session?.cardId === cardId.toUpperCase();
 
   const cardQuery = useQuery({
