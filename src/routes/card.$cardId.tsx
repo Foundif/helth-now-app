@@ -48,20 +48,7 @@ function EmergencyPage() {
     retry: 1,
   });
 
-  const card: PublicEmergencyCard | null =
-    cardQuery.data ??
-    (localMember
-      ? {
-          cardId: localMember.cardId,
-          holderName: localMember.name,
-          bloodGroup: localMember.bloodGroup,
-          allergies: localMember.allergies,
-          medications: localMember.medications,
-          conditions: localMember.conditions,
-          contacts: localMember.contacts,
-          updatedAt: new Date().toISOString(),
-        }
-      : null);
+  const card: PublicEmergencyCard | null = cardQuery.data ?? null;
 
   const summaryQuery = useQuery({
     queryKey: ["emergency-summary", card?.cardId, card?.updatedAt],
