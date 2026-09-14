@@ -12,8 +12,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
-import { useRequireSession } from "@/lib/use-session";
-import { useDocumentsQuery, useProfileQuery } from "@/lib/use-helth-data";
+import { useRequireCompleteProfile } from "@/lib/use-session";
+import { useDocumentsQuery } from "@/lib/use-helth-data";
 import { uploadDocument, deleteDocument, type StoredDoc } from "@/lib/helth.functions";
 import { toast } from "sonner";
 
@@ -56,8 +56,7 @@ function formatSize(bytes: number) {
 }
 
 function LockerPage() {
-  const { session } = useRequireSession();
-  const profileQuery = useProfileQuery(session);
+  const { session, profileQuery } = useRequireCompleteProfile();
   const docsQuery = useDocumentsQuery(session);
   const queryClient = useQueryClient();
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -70,8 +69,7 @@ function LockerPage() {
   const docs = docsQuery.data ?? [];
   const firstName = (profileQuery.data?.name || "Your").split(" ")[0];
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["documents", session?.cardId] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["documents", session?.cardId] });
 
   const upload = async () => {
     if (!file || !session) return;
@@ -120,7 +118,9 @@ function LockerPage() {
         <p className="text-[11px] font-semibold tracking-wide opacity-60">HEALTH LOCKER</p>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{firstName}'s Locker</h1>
         <p className="mt-1 text-sm opacity-60">
-          {docs.length ? `${docs.length} document${docs.length > 1 ? "s" : ""} stored` : "Private to you"}
+          {docs.length
+            ? `${docs.length} document${docs.length > 1 ? "s" : ""} stored`
+            : "Private to you"}
         </p>
       </header>
 
@@ -133,7 +133,9 @@ function LockerPage() {
           <div className="rounded-2xl border border-dashed border-success/60 bg-success/5 px-4 py-10 text-center">
             <FolderOpen className="mx-auto size-8 text-primary" />
             <p className="mt-3 font-bold">Upload your first health document</p>
-            <p className="text-sm text-muted-foreground">Camera · Gallery · PDF — stored securely</p>
+            <p className="text-sm text-muted-foreground">
+              Camera · Gallery · PDF — stored securely
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">

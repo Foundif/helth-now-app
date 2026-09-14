@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, X, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, X, Plus, Loader2 } from "lucide-react";
 import { uid } from "@/lib/helth-store";
 import { useRequireSession } from "@/lib/use-session";
 import { useProfileQuery } from "@/lib/use-helth-data";
@@ -38,10 +38,13 @@ type Draft = {
 };
 
 function ProfilePage() {
-  const { session } = useRequireSession();
+  const { session, update } = useRequireSession();
   const profileQuery = useProfileQuery(session);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  // True until name + blood group are saved — while true, "/" bounces straight
+  // back here, so the header needs a real way out instead of a dead back arrow.
+  const firstTimeSetup = !profileQuery.data?.name?.trim() || !profileQuery.data?.bloodGroup;
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -68,6 +71,12 @@ function ProfilePage() {
   }
 
   const patch = (fn: (d: Draft) => Draft) => setDraft((d) => (d ? fn(d) : d));
+
+  const signOut = () => {
+    update((s) => ({ ...s, session: null }));
+    queryClient.clear();
+    navigate({ to: "/auth" });
+  };
 
   const save = async () => {
     if (!draft.name.trim()) {
@@ -97,9 +106,19 @@ function ProfilePage() {
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-10">
       <header className="flex items-center gap-3 bg-ink px-5 py-5 text-ink-foreground">
-        <Link to="/" aria-label="Back">
-          <ArrowLeft className="size-5" />
-        </Link>
+        {firstTimeSetup ? (
+          <button
+            onClick={signOut}
+            aria-label="Sign out"
+            className="flex items-center gap-1.5 text-sm font-semibold opacity-80"
+          >
+            <LogOut className="size-4" /> Sign out
+          </button>
+        ) : (
+          <Link to="/" aria-label="Back">
+            <ArrowLeft className="size-5" />
+          </Link>
+        )}
         <h1 className="text-xl font-extrabold">Edit Profile</h1>
         <span className="ml-auto text-xs opacity-60">{session.cardId}</span>
       </header>

@@ -3,8 +3,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { IdCard, UserPen, Share2, ChevronRight, ShieldCheck, Loader2 } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
-import { useRequireSession } from "@/lib/use-session";
-import { useProfileQuery } from "@/lib/use-helth-data";
+import { useRequireCompleteProfile } from "@/lib/use-session";
 import { deleteAccount } from "@/lib/helth.functions";
 import { shareCard } from "@/lib/card-utils";
 import { toast } from "sonner";
@@ -28,14 +27,13 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { session, update } = useRequireSession();
-  const profileQuery = useProfileQuery(session);
+  const { session, update, profileQuery } = useRequireCompleteProfile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
   const profile = profileQuery.data;
-  const firstName = (profile?.name || "Your profile").split(" ")[0];
+  const firstName = (profile?.name || "Your profile").split(" ")[0] ?? "Your profile";
 
   const logout = () => {
     update((s) => ({ ...s, session: null }));

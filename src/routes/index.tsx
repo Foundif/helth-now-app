@@ -12,8 +12,8 @@ import {
 import { HealthCard } from "@/components/helth/HealthCard";
 import { BottomNav } from "@/components/helth/BottomNav";
 import { profileCompletion } from "@/lib/helth-store";
-import { useRequireSession } from "@/lib/use-session";
-import { useProfileQuery, useDocumentsQuery } from "@/lib/use-helth-data";
+import { useRequireCompleteProfile } from "@/lib/use-session";
+import { useDocumentsQuery } from "@/lib/use-helth-data";
 import { shareCard } from "@/lib/card-utils";
 import { toast } from "sonner";
 
@@ -38,8 +38,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { session } = useRequireSession();
-  const profileQuery = useProfileQuery(session);
+  const { session, profileQuery } = useRequireCompleteProfile();
   const docsQuery = useDocumentsQuery(session);
   const profile = profileQuery.data;
   const docs = docsQuery.data ?? [];
@@ -93,11 +92,7 @@ function HomePage() {
         </div>
 
         <div className="mt-5">
-          <HealthCard
-            cardId={profile.cardId}
-            name={profile.name}
-            bloodGroup={profile.bloodGroup}
-          />
+          <HealthCard cardId={profile.cardId} name={profile.name} bloodGroup={profile.bloodGroup} />
         </div>
       </header>
 
@@ -136,7 +131,9 @@ function HomePage() {
               <UserPen className="size-5 text-primary" />
               <span className="flex-1">
                 <span className="block text-sm font-bold">
-                  {profile.name && profile.bloodGroup ? "Update your details" : "Add name & blood group"}
+                  {profile.name && profile.bloodGroup
+                    ? "Update your details"
+                    : "Add name & blood group"}
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   Shown to responders in an emergency
