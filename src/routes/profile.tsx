@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, X, Plus } from "lucide-react";
-import { useHelth, activeMember, uid, type Member } from "@/lib/helth-store";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, X, Plus, Loader2 } from "lucide-react";
+import { uid } from "@/lib/helth-store";
+import { useRequireSession } from "@/lib/use-session";
+import { useProfileQuery } from "@/lib/use-helth-data";
+import { saveMyProfile, type Contact } from "@/lib/helth.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
@@ -24,20 +28,80 @@ export const Route = createFileRoute("/profile")({
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
-function ProfilePage() {
-  const { state, update } = useHelth();
-  const member = activeMember(state);
+type Draft = {
+  name: string;
+  bloodGroup: string;
+  allergies: string[];
+  medications: string[];
+  conditions: string[];
+  contacts: Contact[];
+};
 
-  const patch = (fn: (m: Member) => Member) =>
-    update((s) => ({ ...s, members: s.members.map((m) => (m.id === member.id ? fn(m) : m)) }));
+function ProfilePage() {
+  const { session } = useRequireSession();
+  const profileQuery = useProfileQuery(session);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const p = profileQuery.data;
+    if (p && !draft) {
+      setDraft({
+        name: p.name,
+        bloodGroup: p.bloodGroup,
+        allergies: p.allergies,
+        medications: p.medications,
+        conditions: p.conditions,
+        contacts: p.contacts,
+      });
+    }
+  }, [profileQuery.data, draft]);
+
+  if (!session || !draft) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md items-center justify-center bg-background">
+        <Loader2 className="size-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const patch = (fn: (d: Draft) => Draft) => setDraft((d) => (d ? fn(d) : d));
+
+  const save = async () => {
+    if (!draft.name.trim()) {
+      toast.error("Add your full name first");
+      return;
+    }
+    if (!draft.bloodGroup) {
+      toast.error("Select your blood group");
+      return;
+    }
+    setSaving(true);
+    try {
+      const saved = await saveMyProfile({
+        data: { cardId: session.cardId, phone: session.phone, ...draft },
+      });
+      queryClient.setQueryData(["profile", session.cardId], saved);
+      void queryClient.invalidateQueries({ queryKey: ["emergency-card", session.cardId] });
+      toast.success("Your emergency page is updated");
+      navigate({ to: "/" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save your details");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-10">
       <header className="flex items-center gap-3 bg-ink px-5 py-5 text-ink-foreground">
-        <Link to="/settings" aria-label="Back">
+        <Link to="/" aria-label="Back">
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="text-xl font-extrabold">Edit Profile</h1>
+        <span className="ml-auto text-xs opacity-60">{session.cardId}</span>
       </header>
 
       <main className="space-y-6 px-5 py-5">
@@ -47,8 +111,9 @@ function ProfilePage() {
           </label>
           <input
             id="name"
-            value={member.name}
-            onChange={(e) => patch((m) => ({ ...m, name: e.target.value }))}
+            value={draft.name}
+            onChange={(e) => patch((d) => ({ ...d, name: e.target.value }))}
+            placeholder="Your full name"
             className="mt-2 w-full rounded-xl border border-border bg-card px-4 py-3"
           />
         </div>
@@ -59,9 +124,9 @@ function ProfilePage() {
             {bloodGroups.map((b) => (
               <button
                 key={b}
-                onClick={() => patch((m) => ({ ...m, bloodGroup: b }))}
+                onClick={() => patch((d) => ({ ...d, bloodGroup: b }))}
                 className={`rounded-xl border py-3 font-bold ${
-                  b === member.bloodGroup
+                  b === draft.bloodGroup
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-card"
                 }`}
@@ -74,36 +139,113 @@ function ProfilePage() {
 
         <ChipList
           label="Allergies"
-          items={member.allergies}
-          onAdd={(v) => patch((m) => ({ ...m, allergies: [...m.allergies, v] }))}
+          items={draft.allergies}
+          onAdd={(v) => patch((d) => ({ ...d, allergies: [...d.allergies, v] }))}
           onRemove={(i) =>
-            patch((m) => ({ ...m, allergies: m.allergies.filter((_, x) => x !== i) }))
+            patch((d) => ({ ...d, allergies: d.allergies.filter((_, x) => x !== i) }))
           }
         />
         <ChipList
           label="Medications"
-          items={member.medications}
-          onAdd={(v) => patch((m) => ({ ...m, medications: [...m.medications, v] }))}
+          items={draft.medications}
+          onAdd={(v) => patch((d) => ({ ...d, medications: [...d.medications, v] }))}
           onRemove={(i) =>
-            patch((m) => ({ ...m, medications: m.medications.filter((_, x) => x !== i) }))
+            patch((d) => ({ ...d, medications: d.medications.filter((_, x) => x !== i) }))
           }
         />
         <ChipList
           label="Conditions"
-          items={member.conditions}
-          onAdd={(v) => patch((m) => ({ ...m, conditions: [...m.conditions, v] }))}
+          items={draft.conditions}
+          onAdd={(v) => patch((d) => ({ ...d, conditions: [...d.conditions, v] }))}
           onRemove={(i) =>
-            patch((m) => ({ ...m, conditions: m.conditions.filter((_, x) => x !== i) }))
+            patch((d) => ({ ...d, conditions: d.conditions.filter((_, x) => x !== i) }))
           }
         />
 
-        <Contacts memberId={member.id} />
+        <section>
+          <p className="text-sm font-bold">Emergency contacts</p>
+          <div className="mt-2 space-y-3">
+            {draft.contacts.map((c, index) => (
+              <div key={c.id} className="rounded-xl border border-border bg-card p-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={c.name}
+                    placeholder="Name"
+                    onChange={(e) =>
+                      patch((d) => ({
+                        ...d,
+                        contacts: d.contacts.map((x, i) =>
+                          i === index ? { ...x, name: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <button
+                    aria-label="Remove contact"
+                    onClick={() =>
+                      patch((d) => ({ ...d, contacts: d.contacts.filter((_, i) => i !== index) }))
+                    }
+                  >
+                    <X className="size-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={c.phone}
+                    inputMode="tel"
+                    placeholder="Phone number"
+                    onChange={(e) =>
+                      patch((d) => ({
+                        ...d,
+                        contacts: d.contacts.map((x, i) =>
+                          i === index ? { ...x, phone: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={c.relation}
+                    placeholder="Relation"
+                    onChange={(e) =>
+                      patch((d) => ({
+                        ...d,
+                        contacts: d.contacts.map((x, i) =>
+                          i === index ? { ...x, relation: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                    className="w-28 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+            {draft.contacts.length < 5 && (
+              <button
+                onClick={() =>
+                  patch((d) => ({
+                    ...d,
+                    contacts: [
+                      ...d.contacts,
+                      { id: uid(), name: "", phone: "", relation: "Contact" },
+                    ],
+                  }))
+                }
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-bold"
+              >
+                <Plus className="size-4" /> Add contact
+              </button>
+            )}
+          </div>
+        </section>
 
         <button
-          onClick={() => toast.success("Profile saved")}
-          className="w-full rounded-xl bg-primary py-4 font-bold text-primary-foreground"
+          onClick={() => void save()}
+          disabled={saving}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground disabled:opacity-60"
         >
-          Save changes
+          {saving && <Loader2 className="size-4 animate-spin" />} Save details
         </button>
       </main>
     </div>
@@ -118,22 +260,29 @@ function ChipList({
 }: {
   label: string;
   items: string[];
-  onAdd: (v: string) => void;
-  onRemove: (i: number) => void;
+  onAdd: (value: string) => void;
+  onRemove: (index: number) => void;
 }) {
   const [value, setValue] = useState("");
+
+  const add = () => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setValue("");
+  };
+
   return (
-    <div>
+    <section>
       <p className="text-sm font-bold">{label}</p>
       <div className="mt-2 flex flex-wrap gap-2">
-        {items.length === 0 && <span className="text-sm text-muted-foreground">None reported</span>}
-        {items.map((it, i) => (
+        {items.map((item, index) => (
           <span
-            key={`${it}-${i}`}
-            className="flex items-center gap-2 rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground"
+            key={`${item}-${index}`}
+            className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-semibold"
           >
-            {it}
-            <button onClick={() => onRemove(i)} aria-label={`Remove ${it}`}>
+            {item}
+            <button aria-label={`Remove ${item}`} onClick={() => onRemove(index)}>
               <X className="size-3.5" />
             </button>
           </span>
@@ -143,103 +292,14 @@ function ChipList({
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add()}
           placeholder={`Add ${label.toLowerCase()}`}
-          className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm"
+          className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm"
         />
-        <button
-          onClick={() => {
-            if (!value.trim()) return;
-            onAdd(value.trim());
-            setValue("");
-          }}
-          className="rounded-xl bg-ink px-4 text-ink-foreground"
-          aria-label={`Add ${label}`}
-        >
-          <Plus className="size-4" />
+        <button onClick={add} className="rounded-xl bg-ink px-4 font-bold text-ink-foreground">
+          Add
         </button>
       </div>
-    </div>
-  );
-}
-
-function Contacts({ memberId }: { memberId: string }) {
-  const { state, update } = useHelth();
-  const member = state.members.find((m) => m.id === memberId)!;
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-
-  const add = () => {
-    if (!name.trim() || !phone.trim()) return;
-    update((s) => ({
-      ...s,
-      members: s.members.map((m) =>
-        m.id === memberId
-          ? {
-              ...m,
-              contacts: [
-                ...m.contacts,
-                { id: uid(), name: name.trim(), phone: phone.trim(), relation: "Contact" },
-              ],
-            }
-          : m,
-      ),
-    }));
-    setName("");
-    setPhone("");
-  };
-
-  return (
-    <div>
-      <p className="text-sm font-bold">Emergency contacts</p>
-      <div className="mt-2 space-y-2">
-        {member.contacts.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
-          >
-            <span className="flex-1">
-              <span className="block text-sm font-bold">{c.name}</span>
-              <span className="block text-xs text-muted-foreground">
-                {c.phone} · {c.relation}
-              </span>
-            </span>
-            <button
-              aria-label={`Remove ${c.name}`}
-              onClick={() =>
-                update((s) => ({
-                  ...s,
-                  members: s.members.map((m) =>
-                    m.id === memberId
-                      ? { ...m, contacts: m.contacts.filter((x) => x.id !== c.id) }
-                      : m,
-                  ),
-                }))
-              }
-            >
-              <X className="size-4 text-muted-foreground" />
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 space-y-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Contact name"
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm"
-        />
-        <div className="flex gap-2">
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number"
-            className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm"
-          />
-          <button onClick={add} className="rounded-xl bg-ink px-4 text-ink-foreground">
-            <Plus className="size-4" />
-          </button>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }
