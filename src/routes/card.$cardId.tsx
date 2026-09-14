@@ -11,7 +11,7 @@ import {
   Sparkles,
   Pencil,
 } from "lucide-react";
-import { useHelth, memberByCard } from "@/lib/helth-store";
+import { useHelth } from "@/lib/helth-store";
 import { getEmergencyCard, type PublicEmergencyCard } from "@/lib/emergency-card.functions";
 import { getEmergencySummary } from "@/lib/ai-summary.functions";
 import { shareCard } from "@/lib/card-utils";
