@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useHelth } from "@/lib/helth-store";
 import { useProfileQuery } from "@/lib/use-helth-data";
@@ -7,14 +7,22 @@ import { useProfileQuery } from "@/lib/use-helth-data";
 export function useRequireSession() {
   const { state, update } = useHelth();
   const navigate = useNavigate();
+  // The store's very first client render still reflects the SSR placeholder
+  // (onboarded: false, session: null) before localStorage has been read, so
+  // deciding to redirect on that first pass would bounce an already-signed-in
+  // visitor back to onboarding on every fresh launch. Waiting one render lets
+  // the store finish loading the real value first.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   useEffect(() => {
+    if (!ready) return;
     if (!state.onboarded) {
       navigate({ to: "/onboarding" });
       return;
     }
     if (!state.session) navigate({ to: "/auth" });
-  }, [state.onboarded, state.session, navigate]);
+  }, [ready, state.onboarded, state.session, navigate]);
 
   return { state, update, session: state.session };
 }
