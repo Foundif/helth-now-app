@@ -17,9 +17,13 @@ export function SplashScreen() {
   return (
     <div
       aria-hidden="true"
-      className="helth-splash pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center bg-ink"
+      className="helth-splash pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center bg-white"
     >
-      <img src={logoAsset.url} alt="" className="h-24 w-24 rounded-3xl object-contain shadow-lg" />
+      <img
+        src={logoAsset.url}
+        alt=""
+        className="h-44 w-44 rounded-[2.5rem] object-contain drop-shadow-xl"
+      />
     </div>
   );
 }
