@@ -32,7 +32,7 @@ const slides: ReactNode[] = [
       <img
         src={accidentAsset.url}
         alt="Motorcyclist lying on the road beside a fallen bike after a crash"
-        className="h-56 w-full object-contain"
+        className="h-56 w-full object-cover"
       />
     </div>
     <div className="rounded-xl border border-primary/25 bg-accent px-4 py-4 text-center">
@@ -56,7 +56,7 @@ const slides: ReactNode[] = [
       <img
         src={scanAsset.url}
         alt="Phone scanning the QR code on a Helth emergency health card"
-        className="h-56 w-full object-contain"
+        className="h-56 w-full object-cover"
       />
     </div>
     <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center text-muted-foreground">
@@ -73,7 +73,15 @@ const slides: ReactNode[] = [
     </div>
   </>,
   <>
-    <HealthCard cardId="HELTH001" name="Your name" bloodGroup="B-" />
+    <HealthCard
+      cardId="HELTH001"
+      name="Your name"
+      bloodGroup="B-"
+      contacts={[
+        { id: "demo-1", name: "Mom", phone: "+91 90000 00000", relation: "Mother" },
+        { id: "demo-2", name: "Dr. Rao", phone: "+91 90000 11111", relation: "Doctor" },
+      ]}
+    />
     <div className="space-y-3">
       {["Emergency Health Card", "AI Summary Of Your Health"].map((t) => (
         <div key={t} className="flex items-center gap-3 rounded-xl bg-muted px-4 py-4">
