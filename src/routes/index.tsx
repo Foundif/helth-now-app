@@ -92,7 +92,12 @@ function HomePage() {
         </div>
 
         <div className="mt-5">
-          <HealthCard cardId={profile.cardId} name={profile.name} bloodGroup={profile.bloodGroup} />
+          <HealthCard
+            cardId={profile.cardId}
+            name={profile.name}
+            bloodGroup={profile.bloodGroup}
+            contacts={profile.contacts}
+          />
         </div>
       </header>
 
