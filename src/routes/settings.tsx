@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   BellRing,
   Loader2,
+  Stethoscope,
+  Siren,
 } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
 import { useRequireCompleteProfile } from "@/lib/use-session";
@@ -147,6 +149,26 @@ function SettingsPage() {
                 icon={<UserPen className="size-5 text-primary" />}
                 title="Edit Profile"
                 sub="Update your medical details"
+              />
+            </Link>
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-2 text-sm font-bold text-muted-foreground">Healthcare</p>
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <Link to="/doctor-share" className="block border-b border-border">
+              <Row
+                icon={<Stethoscope className="size-5 text-primary" />}
+                title="Share with Doctor"
+                sub="Time-limited link with only what you pick"
+              />
+            </Link>
+            <Link to="/hospitals" className="block">
+              <Row
+                icon={<Siren className="size-5 text-primary" />}
+                title="Hospitals & Ambulance"
+                sub="Saved hospitals and one-tap emergency calls"
               />
             </Link>
           </div>

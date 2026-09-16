@@ -12,13 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BloodRouteImport } from './routes/blood'
+import { Route as DoctorShareRouteImport } from './routes/doctor-share'
 import { Route as FamilyRouteImport } from './routes/family'
+import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as LockerRouteImport } from './routes/locker'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CardCardIdRouteImport } from './routes/card.$cardId'
+import { Route as DoctorIdRouteImport } from './routes/doctor.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,9 +38,19 @@ const BloodRoute = BloodRouteImport.update({
   path: '/blood',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorShareRoute = DoctorShareRouteImport.update({
+  id: '/doctor-share',
+  path: '/doctor-share',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FamilyRoute = FamilyRouteImport.update({
   id: '/family',
   path: '/family',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalsRoute = HospitalsRouteImport.update({
+  id: '/hospitals',
+  path: '/hospitals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LockerRoute = LockerRouteImport.update({
@@ -70,43 +83,57 @@ const CardCardIdRoute = CardCardIdRouteImport.update({
   path: '/card/$cardId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorIdRoute = DoctorIdRouteImport.update({
+  id: '/doctor/$id',
+  path: '/doctor/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/doctor-share': typeof DoctorShareRoute
   '/family': typeof FamilyRoute
+  '/hospitals': typeof HospitalsRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/doctor/$id': typeof DoctorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/doctor-share': typeof DoctorShareRoute
   '/family': typeof FamilyRoute
+  '/hospitals': typeof HospitalsRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/doctor/$id': typeof DoctorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/doctor-share': typeof DoctorShareRoute
   '/family': typeof FamilyRoute
+  '/hospitals': typeof HospitalsRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/card/$cardId': typeof CardCardIdRoute
+  '/doctor/$id': typeof DoctorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,50 +141,62 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/blood'
+    | '/doctor-share'
     | '/family'
+    | '/hospitals'
     | '/locker'
     | '/onboarding'
     | '/profile'
     | '/scan'
     | '/settings'
     | '/card/$cardId'
+    | '/doctor/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/blood'
+    | '/doctor-share'
     | '/family'
+    | '/hospitals'
     | '/locker'
     | '/onboarding'
     | '/profile'
     | '/scan'
     | '/settings'
     | '/card/$cardId'
+    | '/doctor/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/blood'
+    | '/doctor-share'
     | '/family'
+    | '/hospitals'
     | '/locker'
     | '/onboarding'
     | '/profile'
     | '/scan'
     | '/settings'
     | '/card/$cardId'
+    | '/doctor/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BloodRoute: typeof BloodRoute
+  DoctorShareRoute: typeof DoctorShareRoute
   FamilyRoute: typeof FamilyRoute
+  HospitalsRoute: typeof HospitalsRoute
   LockerRoute: typeof LockerRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   CardCardIdRoute: typeof CardCardIdRoute
+  DoctorIdRoute: typeof DoctorIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -183,11 +222,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BloodRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctor-share': {
+      id: '/doctor-share'
+      path: '/doctor-share'
+      fullPath: '/doctor-share'
+      preLoaderRoute: typeof DoctorShareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/family': {
       id: '/family'
       path: '/family'
       fullPath: '/family'
       preLoaderRoute: typeof FamilyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospitals': {
+      id: '/hospitals'
+      path: '/hospitals'
+      fullPath: '/hospitals'
+      preLoaderRoute: typeof HospitalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locker': {
@@ -232,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardCardIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctor/$id': {
+      id: '/doctor/$id'
+      path: '/doctor/$id'
+      fullPath: '/doctor/$id'
+      preLoaderRoute: typeof DoctorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -239,13 +299,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BloodRoute: BloodRoute,
+  DoctorShareRoute: DoctorShareRoute,
   FamilyRoute: FamilyRoute,
+  HospitalsRoute: HospitalsRoute,
   LockerRoute: LockerRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   CardCardIdRoute: CardCardIdRoute,
+  DoctorIdRoute: DoctorIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

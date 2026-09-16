@@ -8,6 +8,8 @@ import {
   ScanLine,
   QrCode,
   Loader2,
+  Siren,
+  Stethoscope,
 } from "lucide-react";
 import { HealthCard } from "@/components/helth/HealthCard";
 import { BottomNav } from "@/components/helth/BottomNav";
@@ -205,6 +207,20 @@ function HomePage() {
             >
               <FileUp className="mx-auto size-6 text-primary" />
               <span className="mt-2 block text-sm font-bold">Health Locker</span>
+            </Link>
+            <Link
+              to="/hospitals"
+              className="rounded-xl border border-border bg-card px-4 py-5 text-center"
+            >
+              <Siren className="mx-auto size-6 text-primary" />
+              <span className="mt-2 block text-sm font-bold">Hospitals &amp; Ambulance</span>
+            </Link>
+            <Link
+              to="/doctor-share"
+              className="rounded-xl border border-border bg-card px-4 py-5 text-center"
+            >
+              <Stethoscope className="mx-auto size-6 text-primary" />
+              <span className="mt-2 block text-sm font-bold">Share with Doctor</span>
             </Link>
           </div>
         </section>

@@ -313,6 +313,94 @@ export type Database = {
           },
         ]
       }
+      saved_hospitals: {
+        Row: {
+          address: string
+          card_id: string
+          created_at: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+        }
+        Insert: {
+          address?: string
+          card_id: string
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string
+          phone?: string
+        }
+        Update: {
+          address?: string
+          card_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_hospitals_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
+      doctor_shares: {
+        Row: {
+          card_id: string
+          created_at: string
+          document_ids: string[]
+          expires_at: string
+          id: string
+          include_allergies: boolean
+          include_conditions: boolean
+          include_contacts: boolean
+          include_medications: boolean
+          label: string
+          revoked: boolean
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          document_ids?: string[]
+          expires_at: string
+          id?: string
+          include_allergies?: boolean
+          include_conditions?: boolean
+          include_contacts?: boolean
+          include_medications?: boolean
+          label?: string
+          revoked?: boolean
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          document_ids?: string[]
+          expires_at?: string
+          id?: string
+          include_allergies?: boolean
+          include_conditions?: boolean
+          include_contacts?: boolean
+          include_medications?: boolean
+          label?: string
+          revoked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_shares_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
