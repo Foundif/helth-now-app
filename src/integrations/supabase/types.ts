@@ -14,83 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      emergency_cards: {
-        Row: {
-          allergies: string[]
-          blood_group: string
-          card_id: string
-          conditions: string[]
-          contacts: Json
-          edit_token_hash: string
-          holder_name: string
-          medications: string[]
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          allergies?: string[]
-          blood_group?: string
-          card_id: string
-          conditions?: string[]
-          contacts?: Json
-          edit_token_hash?: string
-          holder_name?: string
-          medications?: string[]
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          allergies?: string[]
-          blood_group?: string
-          card_id?: string
-          conditions?: string[]
-          contacts?: Json
-          edit_token_hash?: string
-          holder_name?: string
-          medications?: string[]
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      health_documents: {
-        Row: {
-          card_id: string
-          created_at: string
-          doc_type: string
-          id: string
-          name: string
-          size_bytes: number
-          storage_path: string
-        }
-        Insert: {
-          card_id: string
-          created_at?: string
-          doc_type: string
-          id?: string
-          name: string
-          size_bytes?: number
-          storage_path: string
-        }
-        Update: {
-          card_id?: string
-          created_at?: string
-          doc_type?: string
-          id?: string
-          name?: string
-          size_bytes?: number
-          storage_path?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "health_documents_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "emergency_cards"
-            referencedColumns: ["card_id"]
-          },
-        ]
-      }
       blood_donors: {
         Row: {
           active: boolean
@@ -173,6 +96,137 @@ export type Database = {
           },
         ]
       }
+      doctor_shares: {
+        Row: {
+          card_id: string
+          created_at: string
+          document_ids: string[]
+          expires_at: string
+          id: string
+          include_allergies: boolean
+          include_conditions: boolean
+          include_contacts: boolean
+          include_medications: boolean
+          label: string
+          revoked: boolean
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          document_ids?: string[]
+          expires_at: string
+          id?: string
+          include_allergies?: boolean
+          include_conditions?: boolean
+          include_contacts?: boolean
+          include_medications?: boolean
+          label?: string
+          revoked?: boolean
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          document_ids?: string[]
+          expires_at?: string
+          id?: string
+          include_allergies?: boolean
+          include_conditions?: boolean
+          include_contacts?: boolean
+          include_medications?: boolean
+          label?: string
+          revoked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_shares_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
+      emergency_cards: {
+        Row: {
+          allergies: string[]
+          blood_group: string
+          card_id: string
+          conditions: string[]
+          contacts: Json
+          edit_token_hash: string
+          holder_name: string
+          medications: string[]
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string[]
+          blood_group?: string
+          card_id: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash?: string
+          holder_name?: string
+          medications?: string[]
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string[]
+          blood_group?: string
+          card_id?: string
+          conditions?: string[]
+          contacts?: Json
+          edit_token_hash?: string
+          holder_name?: string
+          medications?: string[]
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      family_alerts: {
+        Row: {
+          card_id: string
+          circle_id: string
+          created_at: string
+          id: string
+          message: string
+          type: string
+        }
+        Insert: {
+          card_id: string
+          circle_id: string
+          created_at?: string
+          id?: string
+          message?: string
+          type: string
+        }
+        Update: {
+          card_id?: string
+          circle_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_alerts_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "family_alerts_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_circles: {
         Row: {
           created_at: string
@@ -224,6 +278,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "family_members_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+          {
             foreignKeyName: "family_members_circle_id_fkey"
             columns: ["circle_id"]
             isOneToOne: false
@@ -231,49 +292,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "family_members_card_id_fkey"
-            columns: ["card_id"]
+            foreignKeyName: "family_members_invited_by_card_id_fkey"
+            columns: ["invited_by_card_id"]
             isOneToOne: false
             referencedRelation: "emergency_cards"
             referencedColumns: ["card_id"]
           },
         ]
       }
-      family_alerts: {
+      health_documents: {
         Row: {
           card_id: string
-          circle_id: string
           created_at: string
+          doc_type: string
           id: string
-          message: string
-          type: string
+          name: string
+          size_bytes: number
+          storage_path: string
         }
         Insert: {
           card_id: string
-          circle_id: string
           created_at?: string
+          doc_type: string
           id?: string
-          message?: string
-          type: string
+          name: string
+          size_bytes?: number
+          storage_path: string
         }
         Update: {
           card_id?: string
-          circle_id?: string
           created_at?: string
+          doc_type?: string
           id?: string
-          message?: string
-          type?: string
+          name?: string
+          size_bytes?: number
+          storage_path?: string
         }
         Relationships: [
           {
-            foreignKeyName: "family_alerts_circle_id_fkey"
-            columns: ["circle_id"]
-            isOneToOne: false
-            referencedRelation: "family_circles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_alerts_card_id_fkey"
+            foreignKeyName: "health_documents_card_id_fkey"
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "emergency_cards"
@@ -344,56 +401,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "saved_hospitals_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "emergency_cards"
-            referencedColumns: ["card_id"]
-          },
-        ]
-      }
-      doctor_shares: {
-        Row: {
-          card_id: string
-          created_at: string
-          document_ids: string[]
-          expires_at: string
-          id: string
-          include_allergies: boolean
-          include_conditions: boolean
-          include_contacts: boolean
-          include_medications: boolean
-          label: string
-          revoked: boolean
-        }
-        Insert: {
-          card_id: string
-          created_at?: string
-          document_ids?: string[]
-          expires_at: string
-          id?: string
-          include_allergies?: boolean
-          include_conditions?: boolean
-          include_contacts?: boolean
-          include_medications?: boolean
-          label?: string
-          revoked?: boolean
-        }
-        Update: {
-          card_id?: string
-          created_at?: string
-          document_ids?: string[]
-          expires_at?: string
-          id?: string
-          include_allergies?: boolean
-          include_conditions?: boolean
-          include_contacts?: boolean
-          include_medications?: boolean
-          label?: string
-          revoked?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "doctor_shares_card_id_fkey"
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "emergency_cards"
