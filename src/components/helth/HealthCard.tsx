@@ -87,33 +87,81 @@ export function HealthCard({
         </div>
 
         {/* Back */}
-        <div className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-border bg-ink text-ink-foreground shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
-            <Cross className="size-5 shrink-0 fill-primary text-primary" strokeWidth={3} />
-            <span className="text-xs font-bold tracking-wide">EMERGENCY CONTACTS</span>
+        <div className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <div className="flex items-center gap-2 p-2.5">
+            <div className="flex-1 truncate rounded-lg bg-primary px-3 py-2">
+              <span className="text-sm font-extrabold text-primary-foreground">EMERGENCY</span>{" "}
+              <span className="text-sm font-semibold text-ink">Health Card</span>
+            </div>
+            <Cross className="size-8 shrink-0 fill-primary text-primary" strokeWidth={3} />
           </div>
-          <div className="flex-1 space-y-1.5 overflow-y-auto px-3 py-2">
+
+          <div className="flex-1 space-y-1.5 overflow-y-auto px-3">
             {contacts.length === 0 ? (
-              <p className="text-xs opacity-60">No contacts added yet.</p>
-            ) : (
-              contacts.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-white/10 px-2.5 py-1.5"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-xs font-bold">{c.name}</span>
-                    <span className="block truncate text-[10px] opacity-70">
-                      {c.relation ? `${c.relation} · ` : ""}
-                      {c.phone}
-                    </span>
-                  </span>
-                  <Phone className="size-3.5 shrink-0 text-primary" />
+              <>
+                <div>
+                  <p className="text-[9px] font-bold tracking-wide text-primary">
+                    EMERGENCY CONTACT NAME:
+                  </p>
+                  <p className="text-sm text-muted-foreground italic">Not added yet</p>
                 </div>
-              ))
+                <div>
+                  <p className="text-[9px] font-bold tracking-wide text-primary">
+                    EMERGENCY NUMBER:
+                  </p>
+                  <p className="text-sm text-muted-foreground italic">Not added yet</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-[9px] font-bold tracking-wide text-primary">
+                    EMERGENCY CONTACT NAME:
+                  </p>
+                  <p className="truncate text-sm font-bold">{contacts[0]?.name}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold tracking-wide text-primary">
+                    EMERGENCY NUMBER:
+                  </p>
+                  <p className="truncate text-sm font-bold">{contacts[0]?.phone}</p>
+                </div>
+                {contacts.slice(1).map((c) => (
+                  <p key={c.id} className="truncate text-[10px] text-muted-foreground">
+                    <span className="font-semibold text-foreground">{c.name}:</span> {c.phone}
+                  </p>
+                ))}
+              </>
             )}
           </div>
-          <p className="flex items-center justify-center gap-1 border-t border-white/10 py-1 text-[9px] opacity-60">
+
+          <div className="border-t border-primary/30 px-3 pt-1.5">
+            <p className="text-[8px] text-muted-foreground">
+              In emergency: call number above or scan QR on front
+            </p>
+            <div className="mt-1 flex items-end justify-between">
+              <div className="flex gap-3">
+                <span>
+                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold">
+                    <Phone className="size-3 fill-primary text-primary" /> 108
+                  </span>
+                  <span className="text-[8px] font-semibold text-primary">Ambulance</span>
+                </span>
+                <span>
+                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold">
+                    <Phone className="size-3 fill-primary text-primary" /> 112
+                  </span>
+                  <span className="text-[8px] font-semibold text-primary">Emergency</span>
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-extrabold text-primary">{cardId}</p>
+                <p className="truncate text-[8px] text-muted-foreground">{host}</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="flex items-center justify-center gap-1 border-t border-border py-1 text-[9px] text-muted-foreground">
             <RotateCcw className="size-2.5" /> Tap to flip back
           </p>
         </div>
