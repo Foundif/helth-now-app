@@ -113,7 +113,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
   const { data: memberRows } = await db
     .from("family_members")
     .select(
-      "id, card_id, relation, status, created_at, emergency_cards(holder_name, blood_group, allergies, medications, updated_at)",
+      "id, card_id, relation, status, created_at, emergency_cards!family_members_card_id_fkey(holder_name, blood_group, allergies, medications, updated_at)",
     )
     .eq("circle_id", circleId)
     .in("status", ["accepted", "pending"]);

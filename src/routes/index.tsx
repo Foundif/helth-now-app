@@ -17,7 +17,10 @@ import { SosButton } from "@/components/helth/SosButton";
 import { profileCompletion } from "@/lib/helth-store";
 import { useRequireCompleteProfile } from "@/lib/use-session";
 import { useDocumentsQuery } from "@/lib/use-helth-data";
+import { getFamilyState } from "@/lib/family.functions";
 import { shareCard } from "@/lib/card-utils";
+import { useQuery } from "@tanstack/react-query";
+import { Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -45,6 +48,15 @@ function HomePage() {
   const docsQuery = useDocumentsQuery(session);
   const profile = profileQuery.data;
   const docs = docsQuery.data ?? [];
+
+  const familyQuery = useQuery({
+    queryKey: ["family-state", session?.cardId],
+    queryFn: () => getFamilyState({ data: { cardId: session!.cardId, phone: session!.phone } }),
+    enabled: !!session,
+  });
+  const familyMembers = (familyQuery.data?.members ?? []).filter(
+    (m) => !m.isMe && m.status === "accepted",
+  );
 
   if (!session || (profileQuery.isLoading && !profile)) {
     return (
@@ -111,6 +123,56 @@ function HomePage() {
           name={profile.name}
           contacts={profile.contacts}
         />
+
+        <section>
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 font-bold">
+              <Users className="size-4 text-primary" /> Family
+            </h2>
+            <Link to="/family" className="flex items-center gap-1 text-sm font-bold text-primary">
+              <UserPlus className="size-4" /> Add family
+            </Link>
+          </div>
+
+          {familyQuery.isLoading ? (
+            <div className="mt-3 flex gap-3 overflow-x-auto">
+              <div className="h-24 w-32 shrink-0 animate-pulse rounded-xl bg-muted" />
+              <div className="h-24 w-32 shrink-0 animate-pulse rounded-xl bg-muted" />
+            </div>
+          ) : familyMembers.length === 0 ? (
+            <Link
+              to="/family"
+              className="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-border px-4 py-4 text-left"
+            >
+              <span className="rounded-lg bg-muted p-2">
+                <UserPlus className="size-5 text-primary" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-sm font-bold">Add your family members</span>
+                <span className="block text-xs text-muted-foreground">
+                  See their key info and get alerted if they need help
+                </span>
+              </span>
+            </Link>
+          ) : (
+            <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+              {familyMembers.map((m) => (
+                <Link
+                  key={m.memberRowId}
+                  to="/card/$cardId"
+                  params={{ cardId: m.cardId }}
+                  className="w-32 shrink-0 rounded-xl border border-border bg-card p-3"
+                >
+                  <div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-primary-foreground">
+                    {m.bloodGroup || "—"}
+                  </div>
+                  <p className="mt-2 truncate text-sm font-bold">{m.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{m.relation || "Family"}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
         <Link
           to="/card/$cardId"
