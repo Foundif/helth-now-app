@@ -1,11 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { IdCard, UserPen, Share2, ChevronRight, ShieldCheck, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  IdCard,
+  UserPen,
+  Share2,
+  ChevronRight,
+  ShieldCheck,
+  BellRing,
+  Loader2,
+} from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
 import { useRequireCompleteProfile } from "@/lib/use-session";
 import { deleteAccount } from "@/lib/helth.functions";
+import { getCheckinSettings, setCheckinSettings } from "@/lib/checkin.functions";
 import { shareCard } from "@/lib/card-utils";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -34,6 +44,34 @@ function SettingsPage() {
 
   const profile = profileQuery.data;
   const firstName = (profile?.name || "Your profile").split(" ")[0] ?? "Your profile";
+
+  const checkinQuery = useQuery({
+    queryKey: ["checkin-settings", session?.cardId],
+    queryFn: () => getCheckinSettings({ data: { cardId: session!.cardId, phone: session!.phone } }),
+    enabled: !!session,
+  });
+  const [intervalDraft, setIntervalDraft] = useState(30);
+  const [savingCheckin, setSavingCheckin] = useState(false);
+
+  useEffect(() => {
+    if (checkinQuery.data) setIntervalDraft(checkinQuery.data.intervalMinutes);
+  }, [checkinQuery.data]);
+
+  const applyCheckinSettings = async (enabled: boolean, intervalMinutes: number) => {
+    if (!session) return;
+    setSavingCheckin(true);
+    try {
+      await setCheckinSettings({
+        data: { cardId: session.cardId, phone: session.phone, enabled, intervalMinutes },
+      });
+      await queryClient.invalidateQueries({ queryKey: ["checkin-settings", session.cardId] });
+      toast.success(enabled ? "Safety check-in enabled" : "Safety check-in turned off");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update check-in settings");
+    } finally {
+      setSavingCheckin(false);
+    }
+  };
 
   const logout = () => {
     update((s) => ({ ...s, session: null }));
@@ -125,6 +163,56 @@ function SettingsPage() {
                 toast("Your phone number and documents are never shown to anyone who scans")
               }
             />
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-2 text-sm font-bold text-muted-foreground">Safety check-in</p>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-muted p-2">
+                <BellRing className="size-5 text-primary" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-bold">Periodic "are you safe?" check</span>
+                <span className="block text-sm text-muted-foreground">
+                  If you don't respond, an alarm plays and your family is alerted
+                </span>
+              </span>
+              <Switch
+                checked={checkinQuery.data?.enabled ?? false}
+                disabled={savingCheckin || checkinQuery.isLoading}
+                onCheckedChange={(checked) => void applyCheckinSettings(checked, intervalDraft)}
+              />
+            </div>
+
+            {checkinQuery.data?.enabled && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-sm font-semibold">Check in every</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={5}
+                    max={720}
+                    value={intervalDraft}
+                    onChange={(e) => setIntervalDraft(Number(e.target.value) || 30)}
+                    className="w-20 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <span className="text-sm text-muted-foreground">minutes</span>
+                  <button
+                    onClick={() => void applyCheckinSettings(true, intervalDraft)}
+                    disabled={savingCheckin || intervalDraft === checkinQuery.data.intervalMinutes}
+                    className="ml-auto rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
+                  >
+                    {savingCheckin ? <Loader2 className="size-3.5 animate-spin" /> : "Save"}
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Works while Helth is open on your phone. Add it to your home screen so it's easy
+                  to keep open.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
