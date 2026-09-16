@@ -39,12 +39,12 @@ export type FamilyAlertItem = {
   createdAt: string;
 };
 
-/** Writes a family alert for this card's circle, if it has one. Silently no-ops otherwise. */
+/** Writes a family alert for this card's circle, if it has one. Returns whether it had one. */
 export async function logFamilyAlert(
   cardId: string,
   type: FamilyAlertItem["type"],
   message: string,
-) {
+): Promise<boolean> {
   const db = await admin();
   const { data: membership } = await db
     .from("family_members")
@@ -52,13 +52,14 @@ export async function logFamilyAlert(
     .eq("card_id", cardId)
     .eq("status", "accepted")
     .maybeSingle();
-  if (!membership) return;
+  if (!membership) return false;
   await db.from("family_alerts").insert({
     circle_id: membership.circle_id,
     card_id: cardId,
     type,
     message,
   });
+  return true;
 }
 
 async function getOwnCircleId(cardId: string) {

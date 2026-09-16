@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { HealthCard } from "@/components/helth/HealthCard";
 import { BottomNav } from "@/components/helth/BottomNav";
+import { SosButton } from "@/components/helth/SosButton";
 import { profileCompletion } from "@/lib/helth-store";
 import { useRequireCompleteProfile } from "@/lib/use-session";
 import { useDocumentsQuery } from "@/lib/use-helth-data";
@@ -102,6 +103,13 @@ function HomePage() {
       </header>
 
       <main className="-mt-4 space-y-6 rounded-t-3xl bg-background px-5 pt-5">
+        <SosButton
+          cardId={profile.cardId}
+          phone={session.phone}
+          name={profile.name}
+          contacts={profile.contacts}
+        />
+
         <Link
           to="/card/$cardId"
           params={{ cardId: profile.cardId }}
