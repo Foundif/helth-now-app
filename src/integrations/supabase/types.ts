@@ -173,6 +173,146 @@ export type Database = {
           },
         ]
       }
+      family_circles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          card_id: string
+          circle_id: string
+          created_at: string
+          id: string
+          invited_by_card_id: string
+          relation: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          card_id: string
+          circle_id: string
+          created_at?: string
+          id?: string
+          invited_by_card_id: string
+          relation?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          card_id?: string
+          circle_id?: string
+          created_at?: string
+          id?: string
+          invited_by_card_id?: string
+          relation?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_members_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
+      family_alerts: {
+        Row: {
+          card_id: string
+          circle_id: string
+          created_at: string
+          id: string
+          message: string
+          type: string
+        }
+        Insert: {
+          card_id: string
+          circle_id: string
+          created_at?: string
+          id?: string
+          message?: string
+          type: string
+        }
+        Update: {
+          card_id?: string
+          circle_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_alerts_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_alerts_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
+      safety_checkins: {
+        Row: {
+          card_id: string
+          enabled: boolean
+          interval_minutes: number
+          last_confirmed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          card_id: string
+          enabled?: boolean
+          interval_minutes?: number
+          last_confirmed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          card_id?: string
+          enabled?: boolean
+          interval_minutes?: number
+          last_confirmed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_checkins_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: true
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

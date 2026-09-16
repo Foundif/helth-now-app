@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BloodRouteImport } from './routes/blood'
+import { Route as FamilyRouteImport } from './routes/family'
 import { Route as LockerRouteImport } from './routes/locker'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -32,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
 const BloodRoute = BloodRouteImport.update({
   id: '/blood',
   path: '/blood',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamilyRoute = FamilyRouteImport.update({
+  id: '/family',
+  path: '/family',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LockerRoute = LockerRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/family': typeof FamilyRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/family': typeof FamilyRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blood': typeof BloodRoute
+  '/family': typeof FamilyRoute
   '/locker': typeof LockerRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/blood'
+    | '/family'
     | '/locker'
     | '/onboarding'
     | '/profile'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/blood'
+    | '/family'
     | '/locker'
     | '/onboarding'
     | '/profile'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/blood'
+    | '/family'
     | '/locker'
     | '/onboarding'
     | '/profile'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BloodRoute: typeof BloodRoute
+  FamilyRoute: typeof FamilyRoute
   LockerRoute: typeof LockerRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/blood'
       fullPath: '/blood'
       preLoaderRoute: typeof BloodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/family': {
+      id: '/family'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof FamilyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locker': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BloodRoute: BloodRoute,
+  FamilyRoute: FamilyRoute,
   LockerRoute: LockerRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
