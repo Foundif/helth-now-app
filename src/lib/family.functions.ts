@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { admin, requireOwner } from "@/lib/helth.functions";
+import { admin, requireOwner, type Contact } from "@/lib/helth.functions";
 
 export type FamilyMember = {
   memberRowId: string;
@@ -8,6 +8,7 @@ export type FamilyMember = {
   bloodGroup: string;
   allergyCount: number;
   medicationCount: number;
+  contacts: Contact[];
   relation: string;
   status: "pending" | "accepted";
   isMe: boolean;
@@ -113,7 +114,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
   const { data: memberRows } = await db
     .from("family_members")
     .select(
-      "id, card_id, relation, status, created_at, emergency_cards!family_members_card_id_fkey(holder_name, blood_group, allergies, medications, updated_at)",
+      "id, card_id, relation, status, created_at, emergency_cards!family_members_card_id_fkey(holder_name, blood_group, allergies, medications, contacts, updated_at)",
     )
     .eq("circle_id", circleId)
     .in("status", ["accepted", "pending"]);
@@ -124,6 +125,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
       blood_group: string;
       allergies: unknown;
       medications: unknown;
+      contacts: unknown;
       updated_at: string;
     } | null;
     return {
@@ -133,6 +135,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
       bloodGroup: c?.blood_group ?? "",
       allergyCount: Array.isArray(c?.allergies) ? c.allergies.length : 0,
       medicationCount: Array.isArray(c?.medications) ? c.medications.length : 0,
+      contacts: Array.isArray(c?.contacts) ? (c.contacts as unknown as Contact[]) : [],
       relation: r.relation,
       status: r.status as "pending" | "accepted",
       isMe: r.card_id === cardId,

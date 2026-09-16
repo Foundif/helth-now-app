@@ -20,7 +20,7 @@ import { useDocumentsQuery } from "@/lib/use-helth-data";
 import { getFamilyState } from "@/lib/family.functions";
 import { shareCard } from "@/lib/card-utils";
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserPlus } from "lucide-react";
+import { useRef, useState, type TouchEvent } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -57,6 +57,49 @@ function HomePage() {
   const familyMembers = (familyQuery.data?.members ?? []).filter(
     (m) => !m.isMe && m.status === "accepted",
   );
+
+  const cards = profile
+    ? [
+        {
+          cardId: profile.cardId,
+          name: profile.name,
+          bloodGroup: profile.bloodGroup,
+          contacts: profile.contacts,
+          label: "You",
+        },
+        ...familyMembers.map((m) => ({
+          cardId: m.cardId,
+          name: m.name,
+          bloodGroup: m.bloodGroup,
+          contacts: m.contacts,
+          label: m.relation || "Family",
+        })),
+      ]
+    : [];
+
+  const [cardIndex, setCardIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef(0);
+
+  const goToCard = (next: number) => setCardIndex(Math.min(cards.length - 1, Math.max(0, next)));
+
+  const onCardTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+    touchDeltaX.current = 0;
+  };
+  const onCardTouchMove = (e: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const x = e.touches[0]?.clientX;
+    if (x === undefined) return;
+    touchDeltaX.current = x - touchStartX.current;
+  };
+  const onCardTouchEnd = () => {
+    if (Math.abs(touchDeltaX.current) > 40) {
+      goToCard(touchDeltaX.current < 0 ? cardIndex + 1 : cardIndex - 1);
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
 
   if (!session || (profileQuery.isLoading && !profile)) {
     return (
@@ -107,12 +150,50 @@ function HomePage() {
         </div>
 
         <div className="mt-5">
-          <HealthCard
-            cardId={profile.cardId}
-            name={profile.name}
-            bloodGroup={profile.bloodGroup}
-            contacts={profile.contacts}
-          />
+          <div
+            className="overflow-hidden"
+            onTouchStart={onCardTouchStart}
+            onTouchMove={onCardTouchMove}
+            onTouchEnd={onCardTouchEnd}
+          >
+            <div
+              className="flex transition-transform duration-300 ease-out"
+              style={{
+                width: `${cards.length * 100}%`,
+                transform: `translateX(-${(cardIndex * 100) / cards.length}%)`,
+              }}
+            >
+              {cards.map((c) => (
+                <div
+                  key={c.cardId}
+                  style={{ width: `${100 / cards.length}%` }}
+                  className="shrink-0 px-0.5"
+                >
+                  <HealthCard
+                    cardId={c.cardId}
+                    name={c.name}
+                    bloodGroup={c.bloodGroup}
+                    contacts={c.contacts}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {cards.length > 1 && (
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <div className="relative h-1.5 w-16 overflow-hidden rounded-full bg-white/20">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-primary transition-transform duration-300 ease-out"
+                  style={{
+                    width: `${100 / cards.length}%`,
+                    transform: `translateX(${cardIndex * 100}%)`,
+                  }}
+                />
+              </div>
+              <p className="text-xs font-semibold opacity-70">{cards[cardIndex]?.label}'s card</p>
+            </div>
+          )}
         </div>
       </header>
 
@@ -123,56 +204,6 @@ function HomePage() {
           name={profile.name}
           contacts={profile.contacts}
         />
-
-        <section>
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-1.5 font-bold">
-              <Users className="size-4 text-primary" /> Family
-            </h2>
-            <Link to="/family" className="flex items-center gap-1 text-sm font-bold text-primary">
-              <UserPlus className="size-4" /> Add family
-            </Link>
-          </div>
-
-          {familyQuery.isLoading ? (
-            <div className="mt-3 flex gap-3 overflow-x-auto">
-              <div className="h-24 w-32 shrink-0 animate-pulse rounded-xl bg-muted" />
-              <div className="h-24 w-32 shrink-0 animate-pulse rounded-xl bg-muted" />
-            </div>
-          ) : familyMembers.length === 0 ? (
-            <Link
-              to="/family"
-              className="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-border px-4 py-4 text-left"
-            >
-              <span className="rounded-lg bg-muted p-2">
-                <UserPlus className="size-5 text-primary" />
-              </span>
-              <span className="flex-1">
-                <span className="block text-sm font-bold">Add your family members</span>
-                <span className="block text-xs text-muted-foreground">
-                  See their key info and get alerted if they need help
-                </span>
-              </span>
-            </Link>
-          ) : (
-            <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
-              {familyMembers.map((m) => (
-                <Link
-                  key={m.memberRowId}
-                  to="/card/$cardId"
-                  params={{ cardId: m.cardId }}
-                  className="w-32 shrink-0 rounded-xl border border-border bg-card p-3"
-                >
-                  <div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-primary-foreground">
-                    {m.bloodGroup || "—"}
-                  </div>
-                  <p className="mt-2 truncate text-sm font-bold">{m.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{m.relation || "Family"}</p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
 
         <Link
           to="/card/$cardId"
