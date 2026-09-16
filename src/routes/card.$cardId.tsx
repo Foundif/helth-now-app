@@ -44,7 +44,7 @@ function EmergencyPage() {
 
   const cardQuery = useQuery({
     queryKey: ["emergency-card", cardId],
-    queryFn: () => getEmergencyCard({ data: { cardId } }),
+    queryFn: () => getEmergencyCard({ data: { cardId, viewerCardId: state.session?.cardId } }),
     retry: 1,
   });
 
@@ -95,7 +95,10 @@ function EmergencyPage() {
             >
               Retry
             </button>
-            <Link to="/" className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground">
+            <Link
+              to="/"
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
+            >
               Go home
             </Link>
           </div>
@@ -238,15 +241,7 @@ function EmergencyPage() {
   );
 }
 
-function Info({
-  icon,
-  title,
-  items,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  items: string[];
-}) {
+function Info({ icon, title, items }: { icon: React.ReactNode; title: string; items: string[] }) {
   return (
     <section>
       <h2 className="flex items-center gap-2 text-sm font-bold">
