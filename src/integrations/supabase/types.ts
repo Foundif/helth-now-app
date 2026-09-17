@@ -155,6 +155,7 @@ export type Database = {
           contacts: Json
           edit_token_hash: string
           holder_name: string
+          managed_by_card_id: string | null
           medications: string[]
           phone: string | null
           updated_at: string
@@ -167,6 +168,7 @@ export type Database = {
           contacts?: Json
           edit_token_hash?: string
           holder_name?: string
+          managed_by_card_id?: string | null
           medications?: string[]
           phone?: string | null
           updated_at?: string
@@ -179,11 +181,20 @@ export type Database = {
           contacts?: Json
           edit_token_hash?: string
           holder_name?: string
+          managed_by_card_id?: string | null
           medications?: string[]
           phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "emergency_cards_managed_by_card_id_fkey"
+            columns: ["managed_by_card_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_cards"
+            referencedColumns: ["card_id"]
+          },
+        ]
       }
       family_alerts: {
         Row: {

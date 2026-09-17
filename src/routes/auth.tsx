@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Loader2, Phone } from "lucide-react";
 import { signInWithPhone } from "@/lib/helth.functions";
 import { useHelth } from "@/lib/helth-store";
-import logoAsset from "@/assets/helth-logo.png.asset.json";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -55,7 +54,7 @@ function AuthPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center bg-card px-6 py-10">
       <span className="flex size-14 items-center justify-center overflow-hidden rounded-2xl bg-ink">
-        <img src={logoAsset.url} alt="Helth" className="h-full w-full object-cover" />
+        <img src="/icon-512.png" alt="Helth" className="h-full w-full object-cover" />
       </span>
       <h1 className="mt-6 text-3xl font-extrabold tracking-tight">Enter your phone number</h1>
       <p className="mt-2 text-muted-foreground">

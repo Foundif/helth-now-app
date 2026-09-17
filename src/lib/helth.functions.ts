@@ -11,6 +11,7 @@ export type Profile = {
   medications: string[];
   conditions: string[];
   contacts: Contact[];
+  managedByCardId: string | null;
   updatedAt: string;
 };
 
@@ -42,6 +43,7 @@ type Row = {
   medications: string[];
   conditions: string[];
   contacts: unknown;
+  managed_by_card_id: string | null;
   updated_at: string;
 };
 
@@ -55,12 +57,13 @@ function toProfile(row: Row): Profile {
     medications: row.medications ?? [],
     conditions: row.conditions ?? [],
     contacts: Array.isArray(row.contacts) ? (row.contacts as Contact[]) : [],
+    managedByCardId: row.managed_by_card_id,
     updatedAt: row.updated_at,
   };
 }
 
 const COLUMNS =
-  "card_id, phone, holder_name, blood_group, allergies, medications, conditions, contacts, updated_at";
+  "card_id, phone, holder_name, blood_group, allergies, medications, conditions, contacts, managed_by_card_id, updated_at";
 
 export async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -81,6 +84,76 @@ export async function requireOwner(cardId: string, phone: string) {
   return { db, row: data as Row, normalized };
 }
 
+/**
+ * Verifies the caller owns `cardId`, then grants access to `targetCardId` -- either
+ * their own card, or a dependent profile they manage (no separate phone/login).
+ * Returns the row for `targetCardId` so callers act on the right record.
+ */
+export async function requireAccess(cardId: string, phone: string, targetCardId: string) {
+  const { db, row: ownRow } = await requireOwner(cardId, phone);
+  const normalizedTarget = targetCardId.trim().toUpperCase();
+  if (normalizedTarget === ownRow.card_id) return { db, row: ownRow };
+  const { data: targetRow, error } = await db
+    .from("emergency_cards")
+    .select(COLUMNS)
+    .eq("card_id", normalizedTarget)
+    .maybeSingle();
+  if (error || !targetRow) throw new Error("Profile not found");
+  if (targetRow.managed_by_card_id !== ownRow.card_id) {
+    throw new Error("You don't manage this profile");
+  }
+  return { db, row: targetRow as Row };
+}
+
+async function createCardRow(
+  db: Awaited<ReturnType<typeof admin>>,
+  opts: { phone: string | null; holderName: string; managedByCardId: string | null },
+): Promise<Row> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const last = await db
+      .from("emergency_cards")
+      .select("card_id")
+      .like("card_id", "HELTH%")
+      .order("card_id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const lastNumber = Number(last.data?.card_id?.replace("HELTH", "") ?? 0) || 0;
+    const cardId = `HELTH${String(lastNumber + 1 + attempt).padStart(3, "0")}`;
+    const inserted = await db
+      .from("emergency_cards")
+      .insert({
+        card_id: cardId,
+        phone: opts.phone,
+        holder_name: opts.holderName,
+        blood_group: "",
+        allergies: [],
+        medications: [],
+        conditions: [],
+        contacts: [],
+        edit_token_hash: "",
+        managed_by_card_id: opts.managedByCardId,
+      })
+      .select(COLUMNS)
+      .maybeSingle();
+    if (!inserted.error && inserted.data) return inserted.data as Row;
+    if (inserted.error && !inserted.error.message.includes("duplicate")) {
+      throw new Error("Could not create the card");
+    }
+  }
+  throw new Error("Could not create the card, please try again");
+}
+
+/** Creates a dependent profile with no phone/login of its own, fully controlled by the manager. */
+export async function createManagedCard(managerCardId: string, name: string): Promise<Profile> {
+  const db = await admin();
+  const row = await createCardRow(db, {
+    phone: null,
+    holderName: name.trim().slice(0, 100),
+    managedByCardId: managerCardId,
+  });
+  return toProfile(row);
+}
+
 export const signInWithPhone = createServerFn({ method: "POST" })
   .inputValidator((input: { phone: string }) => ({ phone: normalizePhone(input.phone) }))
   .handler(async ({ data }): Promise<Profile> => {
@@ -92,50 +165,25 @@ export const signInWithPhone = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing.error) throw new Error("Could not sign you in right now");
     if (existing.data) return toProfile(existing.data as Row);
-
-    for (let attempt = 0; attempt < 6; attempt++) {
-      const last = await db
-        .from("emergency_cards")
-        .select("card_id")
-        .like("card_id", "HELTH%")
-        .order("card_id", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const lastNumber = Number(last.data?.card_id?.replace("HELTH", "") ?? 0) || 0;
-      const cardId = `HELTH${String(lastNumber + 1 + attempt).padStart(3, "0")}`;
-      const inserted = await db
-        .from("emergency_cards")
-        .insert({
-          card_id: cardId,
-          phone: data.phone,
-          holder_name: "",
-          blood_group: "",
-          allergies: [],
-          medications: [],
-          conditions: [],
-          contacts: [],
-          edit_token_hash: "",
-        })
-        .select(COLUMNS)
-        .maybeSingle();
-      if (!inserted.error && inserted.data) return toProfile(inserted.data as Row);
-      if (inserted.error && !inserted.error.message.includes("duplicate")) {
-        throw new Error("Could not create your card");
-      }
-    }
-    throw new Error("Could not create your card, please try again");
+    const row = await createCardRow(db, {
+      phone: data.phone,
+      holderName: "",
+      managedByCardId: null,
+    });
+    return toProfile(row);
   });
 
 export const getMyProfile = createServerFn({ method: "POST" })
-  .inputValidator((input: { cardId: string; phone: string }) => input)
+  .inputValidator((input: { cardId: string; phone: string; targetCardId?: string }) => input)
   .handler(async ({ data }): Promise<Profile> => {
-    const { row } = await requireOwner(data.cardId, data.phone);
+    const { row } = await requireAccess(data.cardId, data.phone, data.targetCardId ?? data.cardId);
     return toProfile(row);
   });
 
 export type ProfileInput = {
   cardId: string;
   phone: string;
+  targetCardId?: string;
   name: string;
   bloodGroup: string;
   allergies: string[];
@@ -172,7 +220,11 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }): Promise<Profile> => {
-    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { db, row } = await requireAccess(
+      data.cardId,
+      data.phone,
+      data.targetCardId ?? data.cardId,
+    );
     const { data: updated, error } = await db
       .from("emergency_cards")
       .update({
@@ -192,9 +244,13 @@ export const saveMyProfile = createServerFn({ method: "POST" })
   });
 
 export const listDocuments = createServerFn({ method: "POST" })
-  .inputValidator((input: { cardId: string; phone: string }) => input)
+  .inputValidator((input: { cardId: string; phone: string; targetCardId?: string }) => input)
   .handler(async ({ data }): Promise<StoredDoc[]> => {
-    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { db, row } = await requireAccess(
+      data.cardId,
+      data.phone,
+      data.targetCardId ?? data.cardId,
+    );
     const { data: docs, error } = await db
       .from("health_documents")
       .select("id, name, doc_type, size_bytes, storage_path, created_at")
@@ -223,6 +279,7 @@ export const uploadDocument = createServerFn({ method: "POST" })
     (input: {
       cardId: string;
       phone: string;
+      targetCardId?: string;
       name: string;
       docType: string;
       contentType: string;
@@ -234,11 +291,15 @@ export const uploadDocument = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { db, row } = await requireAccess(
+      data.cardId,
+      data.phone,
+      data.targetCardId ?? data.cardId,
+    );
     const binary = atob(data.dataBase64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const safeName = data.name.replace(/[^\w.\-]+/g, "_").slice(0, 80);
+    const safeName = data.name.replace(/[^\w.-]+/g, "_").slice(0, 80);
     const path = `${row.card_id}/${Date.now()}-${safeName}`;
     const upload = await db.storage
       .from("health-docs")
@@ -256,9 +317,15 @@ export const uploadDocument = createServerFn({ method: "POST" })
   });
 
 export const deleteDocument = createServerFn({ method: "POST" })
-  .inputValidator((input: { cardId: string; phone: string; id: string }) => input)
+  .inputValidator(
+    (input: { cardId: string; phone: string; targetCardId?: string; id: string }) => input,
+  )
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { db, row } = await requireAccess(
+      data.cardId,
+      data.phone,
+      data.targetCardId ?? data.cardId,
+    );
     const { data: doc } = await db
       .from("health_documents")
       .select("id, storage_path")

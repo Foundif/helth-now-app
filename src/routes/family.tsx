@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
   UserPlus,
+  UserRoundPlus,
   Check,
   X,
   LogOut,
@@ -12,6 +13,7 @@ import {
   ScanLine,
   BellRing,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
 import { useRequireCompleteProfile } from "@/lib/use-session";
@@ -20,6 +22,8 @@ import {
   inviteFamilyMember,
   respondToFamilyInvite,
   leaveFamilyCircle,
+  createDependentProfile,
+  removeDependent,
   listFamilyAlerts,
   type FamilyAlertItem,
 } from "@/lib/family.functions";
@@ -142,6 +146,53 @@ function FamilyPage() {
     }
   };
 
+  const [depName, setDepName] = useState("");
+  const [depRelation, setDepRelation] = useState("");
+  const [addingDependent, setAddingDependent] = useState(false);
+  const addDependent = async () => {
+    if (!session) return;
+    if (!depName.trim()) {
+      toast.error("Enter their name");
+      return;
+    }
+    setAddingDependent(true);
+    try {
+      await createDependentProfile({
+        data: {
+          cardId: session.cardId,
+          phone: session.phone,
+          name: depName,
+          relation: depRelation,
+        },
+      });
+      await refresh();
+      setDepName("");
+      setDepRelation("");
+      toast.success("Profile added — you can now edit their details and upload documents for them");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not add this profile");
+    } finally {
+      setAddingDependent(false);
+    }
+  };
+
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const removeDep = async (dependentCardId: string) => {
+    if (!session) return;
+    setRemovingId(dependentCardId);
+    try {
+      await removeDependent({
+        data: { cardId: session.cardId, phone: session.phone, dependentCardId },
+      });
+      await refresh();
+      toast.success("Profile removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not remove this profile");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   const family = familyQuery.data;
   const alerts = alertsQuery.data ?? [];
 
@@ -205,30 +256,80 @@ function FamilyPage() {
                   <h2 className="font-extrabold">Members</h2>
                   <div className="mt-3 space-y-2">
                     {family.members.map((m) => (
-                      <Link
+                      <div
                         key={m.memberRowId}
-                        to="/card/$cardId"
-                        params={{ cardId: m.cardId }}
                         className="flex items-center gap-3 rounded-xl bg-muted px-4 py-3"
                       >
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-primary-foreground">
-                          {m.bloodGroup || "—"}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-bold">
-                            {m.name}{" "}
-                            {m.isMe && <span className="text-muted-foreground">(you)</span>}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {m.relation || "Family"}
-                            {m.status === "pending" ? " · invite pending" : ""}
-                            {m.allergyCount > 0 ? ` · ${m.allergyCount} allergies` : ""}
-                            {m.medicationCount > 0 ? ` · ${m.medicationCount} meds` : ""}
-                          </p>
-                        </div>
-                        <Droplet className="size-4 shrink-0 text-muted-foreground" />
-                      </Link>
+                        <Link
+                          to="/card/$cardId"
+                          params={{ cardId: m.cardId }}
+                          className="flex min-w-0 flex-1 items-center gap-3"
+                        >
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-primary-foreground">
+                            {m.bloodGroup || "—"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-bold">
+                              {m.name}{" "}
+                              {m.isMe && <span className="text-muted-foreground">(you)</span>}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {m.relation || "Family"}
+                              {m.managedByMe ? " · managed by you" : ""}
+                              {m.status === "pending" ? " · invite pending" : ""}
+                              {m.allergyCount > 0 ? ` · ${m.allergyCount} allergies` : ""}
+                              {m.medicationCount > 0 ? ` · ${m.medicationCount} meds` : ""}
+                            </p>
+                          </div>
+                        </Link>
+                        {m.managedByMe ? (
+                          <button
+                            aria-label={`Remove ${m.name}`}
+                            onClick={() => void removeDep(m.cardId)}
+                            disabled={removingId === m.cardId}
+                            className="shrink-0 rounded-lg bg-destructive/15 p-2 text-destructive disabled:opacity-40"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        ) : (
+                          <Droplet className="size-4 shrink-0 text-muted-foreground" />
+                        )}
+                      </div>
                     ))}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-border bg-card p-4">
+                  <h2 className="font-extrabold">Add a dependent</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    For a parent or child who doesn't have their own phone — you'll fully manage
+                    their profile and documents.
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    <input
+                      value={depName}
+                      onChange={(e) => setDepName(e.target.value)}
+                      placeholder="Their name"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    />
+                    <input
+                      value={depRelation}
+                      onChange={(e) => setDepRelation(e.target.value)}
+                      placeholder="Relation (e.g. Son, Mother)"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    />
+                    <button
+                      onClick={() => void addDependent()}
+                      disabled={addingDependent}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+                    >
+                      {addingDependent ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <UserRoundPlus className="size-4" />
+                      )}
+                      Add profile
+                    </button>
                   </div>
                 </section>
 
@@ -297,40 +398,76 @@ function FamilyPage() {
                 </button>
               </>
             ) : (
-              <section className="rounded-2xl border border-border bg-card p-4">
-                <h2 className="font-extrabold">Add a family member</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Enter their Helth card ID to invite them. Once they accept, you'll see their key
-                  health info here and get alerted if their card is scanned or they miss a safety
-                  check-in.
-                </p>
-                <div className="mt-3 space-y-3">
-                  <input
-                    value={targetCardId}
-                    onChange={(e) => setTargetCardId(e.target.value)}
-                    placeholder="Their Helth card ID (e.g. HELTH1A2B3)"
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm uppercase"
-                  />
-                  <input
-                    value={relation}
-                    onChange={(e) => setRelation(e.target.value)}
-                    placeholder="Relation (e.g. Son, Wife, Father)"
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
-                  />
-                  <button
-                    onClick={() => void sendInvite()}
-                    disabled={inviting}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
-                  >
-                    {inviting ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <UserPlus className="size-4" />
-                    )}
-                    Send invite
-                  </button>
-                </div>
-              </section>
+              <>
+                <section className="rounded-2xl border border-border bg-card p-4">
+                  <h2 className="font-extrabold">Add a dependent</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    For a parent or child who doesn't have their own phone — you'll fully manage
+                    their profile and documents.
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    <input
+                      value={depName}
+                      onChange={(e) => setDepName(e.target.value)}
+                      placeholder="Their name"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    />
+                    <input
+                      value={depRelation}
+                      onChange={(e) => setDepRelation(e.target.value)}
+                      placeholder="Relation (e.g. Son, Mother)"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    />
+                    <button
+                      onClick={() => void addDependent()}
+                      disabled={addingDependent}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+                    >
+                      {addingDependent ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <UserRoundPlus className="size-4" />
+                      )}
+                      Add profile
+                    </button>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-border bg-card p-4">
+                  <h2 className="font-extrabold">Add a family member</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Enter their Helth card ID to invite them. Once they accept, you'll see their key
+                    health info here and get alerted if their card is scanned or they miss a safety
+                    check-in.
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    <input
+                      value={targetCardId}
+                      onChange={(e) => setTargetCardId(e.target.value)}
+                      placeholder="Their Helth card ID (e.g. HELTH1A2B3)"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm uppercase"
+                    />
+                    <input
+                      value={relation}
+                      onChange={(e) => setRelation(e.target.value)}
+                      placeholder="Relation (e.g. Son, Wife, Father)"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    />
+                    <button
+                      onClick={() => void sendInvite()}
+                      disabled={inviting}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+                    >
+                      {inviting ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <UserPlus className="size-4" />
+                      )}
+                      Send invite
+                    </button>
+                  </div>
+                </section>
+              </>
             )}
           </>
         )}

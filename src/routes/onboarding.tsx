@@ -1,10 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState, type ReactNode, type TouchEvent } from "react";
-import { Check } from "lucide-react";
+import { Check, Siren, ScanLine, QrCode } from "lucide-react";
 import { HealthCard } from "@/components/helth/HealthCard";
 import { useHelth } from "@/lib/helth-store";
-import accidentAsset from "@/assets/onboarding-accident.png.asset.json";
-import scanAsset from "@/assets/onboarding-scan.png.asset.json";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -26,15 +24,22 @@ export const Route = createFileRoute("/onboarding")({
 
 const SWIPE_THRESHOLD_PX = 40;
 
+function Illustration({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto flex h-56 w-full items-center justify-center overflow-hidden rounded-3xl bg-ink shadow-sm">
+      {children}
+    </div>
+  );
+}
+
 const slides: ReactNode[] = [
   <>
-    <div className="mx-auto w-full overflow-hidden rounded-3xl bg-muted shadow-sm">
-      <img
-        src={accidentAsset.url}
-        alt="Motorcyclist lying on the road beside a fallen bike after a crash"
-        className="h-56 w-full object-cover"
-      />
-    </div>
+    <Illustration>
+      <div className="relative flex size-28 items-center justify-center rounded-full bg-primary/15">
+        <div className="absolute inset-0 animate-ping rounded-full bg-primary/10" />
+        <Siren className="relative size-14 text-primary" strokeWidth={1.75} />
+      </div>
+    </Illustration>
     <div className="rounded-xl border border-primary/25 bg-accent px-4 py-4 text-center">
       <p className="text-sm font-bold text-primary">ACCIDENT AT JUNCTION</p>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -52,13 +57,12 @@ const slides: ReactNode[] = [
     </div>
   </>,
   <>
-    <div className="mx-auto w-full overflow-hidden rounded-3xl bg-muted shadow-sm">
-      <img
-        src={scanAsset.url}
-        alt="Phone scanning the QR code on a Helth emergency health card"
-        className="h-56 w-full object-cover"
-      />
-    </div>
+    <Illustration>
+      <div className="flex items-center gap-3">
+        <QrCode className="size-16 text-primary" strokeWidth={1.5} />
+        <ScanLine className="size-10 text-ink-foreground/70" strokeWidth={1.5} />
+      </div>
+    </Illustration>
     <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center text-muted-foreground">
       Scan takes 5 seconds. No app needed. No login. Works on any phone.
     </div>

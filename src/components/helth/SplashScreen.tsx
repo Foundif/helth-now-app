@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/helth-logo.png.asset.json";
 
 const VISIBLE_MS = 1700;
 
@@ -20,7 +19,7 @@ export function SplashScreen() {
       className="helth-splash pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center bg-white"
     >
       <img
-        src={logoAsset.url}
+        src="/icon-512.png"
         alt=""
         className="h-44 w-44 rounded-[2.5rem] object-contain drop-shadow-xl"
       />

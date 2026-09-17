@@ -7,17 +7,22 @@ export function useProfileQuery(session: Session) {
     queryKey: ["profile", session?.cardId],
     enabled: Boolean(session),
     retry: 1,
-    queryFn: () =>
-      getMyProfile({ data: { cardId: session!.cardId, phone: session!.phone } }),
+    queryFn: () => getMyProfile({ data: { cardId: session!.cardId, phone: session!.phone } }),
   });
 }
 
-export function useDocumentsQuery(session: Session) {
+export function useDocumentsQuery(session: Session, targetCardId?: string) {
   return useQuery({
-    queryKey: ["documents", session?.cardId],
+    queryKey: ["documents", session?.cardId, targetCardId ?? session?.cardId],
     enabled: Boolean(session),
     retry: 1,
     queryFn: () =>
-      listDocuments({ data: { cardId: session!.cardId, phone: session!.phone } }),
+      listDocuments({
+        data: {
+          cardId: session!.cardId,
+          phone: session!.phone,
+          ...(targetCardId ? { targetCardId } : {}),
+        },
+      }),
   });
 }

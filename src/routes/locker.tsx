@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
   FolderOpen,
@@ -15,6 +15,7 @@ import { BottomNav } from "@/components/helth/BottomNav";
 import { useRequireCompleteProfile } from "@/lib/use-session";
 import { useDocumentsQuery } from "@/lib/use-helth-data";
 import { uploadDocument, deleteDocument, type StoredDoc } from "@/lib/helth.functions";
+import { getFamilyState } from "@/lib/family.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/locker")({
@@ -57,7 +58,6 @@ function formatSize(bytes: number) {
 
 function LockerPage() {
   const { session, profileQuery } = useRequireCompleteProfile();
-  const docsQuery = useDocumentsQuery(session);
   const queryClient = useQueryClient();
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,10 +66,26 @@ function LockerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const docs = docsQuery.data ?? [];
-  const firstName = (profileQuery.data?.name || "Your").split(" ")[0];
+  const familyQuery = useQuery({
+    queryKey: ["family-state", session?.cardId],
+    queryFn: () => getFamilyState({ data: { cardId: session!.cardId, phone: session!.phone } }),
+    enabled: !!session,
+  });
+  const dependents = (familyQuery.data?.members ?? []).filter((m) => m.managedByMe);
+  const profiles = session
+    ? [{ cardId: session.cardId, name: profileQuery.data?.name || "You" }, ...dependents]
+    : [];
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["documents", session?.cardId] });
+  const [targetCardId, setTargetCardId] = useState<string | null>(null);
+  const activeCardId = targetCardId ?? session?.cardId ?? "";
+  const activeProfile = profiles.find((p) => p.cardId === activeCardId);
+
+  const docsQuery = useDocumentsQuery(session, activeCardId || undefined);
+  const docs = docsQuery.data ?? [];
+  const firstName = (activeProfile?.name || "Your").split(" ")[0];
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ["documents", session?.cardId, activeCardId] });
 
   const upload = async () => {
     if (!file || !session) return;
@@ -84,6 +100,7 @@ function LockerPage() {
         data: {
           cardId: session.cardId,
           phone: session.phone,
+          targetCardId: activeCardId,
           name: file.name,
           docType,
           contentType: file.type,
@@ -104,7 +121,14 @@ function LockerPage() {
   const remove = async (doc: StoredDoc) => {
     if (!session) return;
     try {
-      await deleteDocument({ data: { cardId: session.cardId, phone: session.phone, id: doc.id } });
+      await deleteDocument({
+        data: {
+          cardId: session.cardId,
+          phone: session.phone,
+          targetCardId: activeCardId,
+          id: doc.id,
+        },
+      });
       await refresh();
       toast.success("Document deleted");
     } catch (error) {
@@ -122,6 +146,24 @@ function LockerPage() {
             ? `${docs.length} document${docs.length > 1 ? "s" : ""} stored`
             : "Private to you"}
         </p>
+
+        {profiles.length > 1 && (
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            {profiles.map((p) => (
+              <button
+                key={p.cardId}
+                onClick={() => setTargetCardId(p.cardId)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
+                  p.cardId === activeCardId
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white/10 text-ink-foreground"
+                }`}
+              >
+                {p.cardId === session?.cardId ? "Me" : p.name}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <main className="px-5 py-5">

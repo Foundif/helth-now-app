@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { admin, requireOwner, type Contact } from "@/lib/helth.functions";
+import { admin, requireOwner, createManagedCard, type Contact } from "@/lib/helth.functions";
 
 export type FamilyMember = {
   memberRowId: string;
@@ -12,6 +12,7 @@ export type FamilyMember = {
   relation: string;
   status: "pending" | "accepted";
   isMe: boolean;
+  managedByMe: boolean;
   updatedAt: string;
 };
 
@@ -74,6 +75,30 @@ async function getOwnCircleId(cardId: string) {
   return data?.circle_id ?? null;
 }
 
+/** Returns the caller's circle id, creating one (with the caller as the first accepted member) if needed. */
+async function ensureCircle(
+  db: Awaited<ReturnType<typeof admin>>,
+  row: { card_id: string; holder_name: string },
+) {
+  const existing = await getOwnCircleId(row.card_id);
+  if (existing) return existing;
+  const { data: circle, error } = await db
+    .from("family_circles")
+    .insert({ name: `${row.holder_name || "My"}'s Family` })
+    .select("id")
+    .single();
+  if (error || !circle) throw new Error("Could not create family circle");
+  await db.from("family_members").insert({
+    circle_id: circle.id,
+    card_id: row.card_id,
+    relation: "Me",
+    status: "accepted",
+    invited_by_card_id: row.card_id,
+    responded_at: new Date().toISOString(),
+  });
+  return circle.id;
+}
+
 async function loadFamilyState(cardId: string): Promise<FamilyState> {
   const db = await admin();
   const circleId = await getOwnCircleId(cardId);
@@ -114,7 +139,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
   const { data: memberRows } = await db
     .from("family_members")
     .select(
-      "id, card_id, relation, status, created_at, emergency_cards!family_members_card_id_fkey(holder_name, blood_group, allergies, medications, contacts, updated_at)",
+      "id, card_id, relation, status, created_at, emergency_cards!family_members_card_id_fkey(holder_name, blood_group, allergies, medications, contacts, managed_by_card_id, updated_at)",
     )
     .eq("circle_id", circleId)
     .in("status", ["accepted", "pending"]);
@@ -126,6 +151,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
       allergies: unknown;
       medications: unknown;
       contacts: unknown;
+      managed_by_card_id: string | null;
       updated_at: string;
     } | null;
     return {
@@ -139,6 +165,7 @@ async function loadFamilyState(cardId: string): Promise<FamilyState> {
       relation: r.relation,
       status: r.status as "pending" | "accepted",
       isMe: r.card_id === cardId,
+      managedByMe: c?.managed_by_card_id === cardId,
       updatedAt: c?.updated_at ?? r.created_at,
     };
   });
@@ -190,23 +217,7 @@ export const inviteFamilyMember = createServerFn({ method: "POST" })
     }
 
     let circleId = await getOwnCircleId(row.card_id);
-    if (!circleId) {
-      const { data: circle, error: circleError } = await db
-        .from("family_circles")
-        .insert({ name: `${row.holder_name || "My"}'s Family` })
-        .select("id")
-        .single();
-      if (circleError || !circle) throw new Error("Could not create family circle");
-      circleId = circle.id;
-      await db.from("family_members").insert({
-        circle_id: circleId,
-        card_id: row.card_id,
-        relation: "Me",
-        status: "accepted",
-        invited_by_card_id: row.card_id,
-        responded_at: new Date().toISOString(),
-      });
-    }
+    if (!circleId) circleId = await ensureCircle(db, row);
 
     const { error } = await db.from("family_members").insert({
       circle_id: circleId,
@@ -217,6 +228,47 @@ export const inviteFamilyMember = createServerFn({ method: "POST" })
     });
     if (error) throw new Error("Could not send the invite");
 
+    return loadFamilyState(row.card_id);
+  });
+
+/** Creates a dependent profile with no phone/login of its own (e.g. a child or elderly parent), fully managed by the caller. */
+export const createDependentProfile = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string; name: string; relation: string }) => {
+    const name = input.name.trim();
+    if (!name) throw new Error("Enter their name");
+    return { ...input, name: name.slice(0, 100), relation: input.relation.trim().slice(0, 40) };
+  })
+  .handler(async ({ data }): Promise<FamilyState> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const dependent = await createManagedCard(row.card_id, data.name);
+    const circleId = await ensureCircle(db, row);
+    const { error } = await db.from("family_members").insert({
+      circle_id: circleId,
+      card_id: dependent.cardId,
+      relation: data.relation || "Family",
+      status: "accepted",
+      invited_by_card_id: row.card_id,
+      responded_at: new Date().toISOString(),
+    });
+    if (error) throw new Error("Could not add this profile");
+    return loadFamilyState(row.card_id);
+  });
+
+/** Removes a dependent profile the caller manages. The card and its documents are deleted (cascade). */
+export const removeDependent = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string; dependentCardId: string }) => input)
+  .handler(async ({ data }): Promise<FamilyState> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: dependent } = await db
+      .from("emergency_cards")
+      .select("card_id, managed_by_card_id")
+      .eq("card_id", data.dependentCardId)
+      .maybeSingle();
+    if (!dependent || dependent.managed_by_card_id !== row.card_id) {
+      throw new Error("You don't manage this profile");
+    }
+    const { error } = await db.from("emergency_cards").delete().eq("card_id", dependent.card_id);
+    if (error) throw new Error("Could not remove this profile");
     return loadFamilyState(row.card_id);
   });
 

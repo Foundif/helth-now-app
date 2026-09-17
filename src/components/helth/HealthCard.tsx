@@ -96,42 +96,23 @@ export function HealthCard({
             <Cross className="size-8 shrink-0 fill-primary text-primary" strokeWidth={3} />
           </div>
 
-          <div className="flex-1 space-y-1.5 overflow-y-auto px-3">
+          <div className="flex-1 px-3 py-1">
             {contacts.length === 0 ? (
-              <>
-                <div>
-                  <p className="text-[9px] font-bold tracking-wide text-primary">
-                    EMERGENCY CONTACT NAME:
-                  </p>
-                  <p className="text-sm text-muted-foreground italic">Not added yet</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold tracking-wide text-primary">
-                    EMERGENCY NUMBER:
-                  </p>
-                  <p className="text-sm text-muted-foreground italic">Not added yet</p>
-                </div>
-              </>
+              <p className="text-xs text-muted-foreground italic">
+                No emergency contacts added yet.
+              </p>
             ) : (
-              <>
-                <div>
-                  <p className="text-[9px] font-bold tracking-wide text-primary">
-                    EMERGENCY CONTACT NAME:
-                  </p>
-                  <p className="truncate text-sm font-bold">{contacts[0]?.name}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold tracking-wide text-primary">
-                    EMERGENCY NUMBER:
-                  </p>
-                  <p className="truncate text-sm font-bold">{contacts[0]?.phone}</p>
-                </div>
-                {contacts.slice(1).map((c) => (
-                  <p key={c.id} className="truncate text-[10px] text-muted-foreground">
-                    <span className="font-semibold text-foreground">{c.name}:</span> {c.phone}
-                  </p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                {contacts.map((c, i) => (
+                  <div key={c.id} className="min-w-0">
+                    <p className="truncate text-[8px] font-bold tracking-wide text-primary">
+                      {i === 0 ? "PRIMARY CONTACT" : (c.relation || "CONTACT").toUpperCase()}
+                    </p>
+                    <p className="truncate text-[11px] font-extrabold text-foreground">{c.name}</p>
+                    <p className="truncate text-[10px] font-bold text-foreground">{c.phone}</p>
+                  </div>
                 ))}
-              </>
+              </div>
             )}
           </div>
 
