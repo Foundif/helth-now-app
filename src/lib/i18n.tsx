@@ -18,6 +18,7 @@ const en: Dict = {
   "nav.family": "Family",
   "nav.blood": "Blood",
   "nav.settings": "Settings",
+  "nav.scan": "Scan",
 
   "home.hello": "Hello",
   "home.finishProfile": "Finish your profile",
@@ -112,6 +113,70 @@ const en: Dict = {
 
   "settings.language": "Language",
   "settings.languageHint": "Choose your app language",
+  "settings.title": "Settings",
+  "settings.finishProfile": "Finish your profile",
+  "settings.card": "Card",
+  "settings.viewEmergency": "View emergency page",
+  "settings.responderView": "What a responder sees when they scan",
+  "settings.share": "Share your card link",
+  "settings.shareHint": "Send it to family or your doctor",
+  "settings.profile": "Profile",
+  "settings.editProfile": "Edit profile",
+  "settings.editProfileHint": "Update your medical details",
+  "settings.healthcare": "Healthcare",
+  "settings.doctor": "Share with doctor",
+  "settings.doctorHint": "Time-limited link with only what you pick",
+  "settings.hospitals": "Hospitals & ambulance",
+  "settings.hospitalsHint": "Saved hospitals and one-tap emergency calls",
+  "settings.privacy": "Privacy",
+  "settings.visible": "What others can see",
+  "settings.visibleHint": "Name, blood group, allergies, medicines and contacts only",
+  "settings.checkin": "Safety check-in",
+  "settings.periodic": "Periodic “are you safe?” check",
+  "settings.periodicHint": "If you don't respond, an alarm plays and your family is alerted",
+  "settings.every": "Check in every",
+  "settings.minutes": "minutes",
+  "settings.save": "Save",
+  "settings.logout": "Log out",
+  "settings.delete": "Delete account",
+  "settings.enabled": "Safety check-in enabled",
+  "settings.disabled": "Safety check-in turned off",
+
+  "scan.title": "Scan a card",
+  "scan.subtitle": "Point the camera at the QR code on any Helth emergency card.",
+  "scan.off": "Camera is off",
+  "scan.start": "Start camera",
+  "scan.scanning": "Scanning…",
+  "scan.unsupported": "This browser cannot scan QR codes. Open the card link directly, or enter the card ID below.",
+  "scan.manual": "Or enter the card ID",
+  "scan.open": "Open",
+  "scan.invalid": "That code is not a Helth card",
+  "scan.denied": "Camera permission was denied. Allow camera access or enter the card ID below.",
+
+  "card.emergency": "EMERGENCY",
+  "card.healthCard": "Health Card",
+  "card.primary": "PRIMARY CONTACT",
+  "card.contact": "CONTACT",
+  "card.noContacts": "No emergency contacts added yet.",
+  "card.ambulance": "Ambulance",
+  "card.flipBack": "Tap to flip back",
+  "card.flipContacts": "Tap for emergency contacts",
+
+  "sos.hold": "Hold 2s for Emergency SOS",
+  "sos.sending": "Sending SOS…",
+  "sos.sent": "SOS sent",
+  "sos.location": "Your location was captured",
+  "sos.noLocation": "Location unavailable — turn on location for next time",
+  "sos.familyAlerted": "Your family circle was alerted in-app",
+  "sos.noFamily": "No family circle yet — link family in the Family tab",
+  "sos.contacts": "Reach your contacts now",
+  "sos.close": "Close and stop alarm",
+
+  "checkin.title": "Safety check-in",
+  "checkin.question": "Are you okay?",
+  "checkin.missed": "You didn't respond in time. Your family has been alerted. Tap below if you're safe.",
+  "checkin.safeWithin": "Tap “I'm safe” within {seconds}s, or your family will be notified.",
+  "checkin.safe": "I'm safe",
 };
 
 const ta: Dict = {
@@ -120,6 +185,7 @@ const ta: Dict = {
   "nav.family": "குடும்பம்",
   "nav.blood": "இரத்தம்",
   "nav.settings": "அமைப்புகள்",
+  "nav.scan": "ஸ்கேன்",
 
   "home.hello": "வணக்கம்",
   "home.finishProfile": "சுயவிவரத்தை முடிக்கவும்",
@@ -214,6 +280,70 @@ const ta: Dict = {
 
   "settings.language": "மொழி",
   "settings.languageHint": "செயலியின் மொழியை தேர்வு செய்யுங்கள்",
+  "settings.title": "அமைப்புகள்",
+  "settings.finishProfile": "சுயவிவரத்தை முடிக்கவும்",
+  "settings.card": "அட்டை",
+  "settings.viewEmergency": "அவசர பக்கத்தைப் பார்க்க",
+  "settings.responderView": "ஸ்கேன் செய்யும் உதவியாளர் பார்ப்பது",
+  "settings.share": "அட்டை இணைப்பைப் பகிரவும்",
+  "settings.shareHint": "குடும்பம் அல்லது மருத்துவருக்கு அனுப்பவும்",
+  "settings.profile": "சுயவிவரம்",
+  "settings.editProfile": "சுயவிவரத்தைத் திருத்தவும்",
+  "settings.editProfileHint": "மருத்துவ விவரங்களை புதுப்பிக்கவும்",
+  "settings.healthcare": "மருத்துவ சேவைகள்",
+  "settings.doctor": "மருத்துவருடன் பகிரவும்",
+  "settings.doctorHint": "நீங்கள் தேர்ந்தெடுத்த தகவல்களுக்கு காலவரையறை இணைப்பு",
+  "settings.hospitals": "மருத்துவமனைகள் & ஆம்புலன்ஸ்",
+  "settings.hospitalsHint": "சேமித்த மருத்துவமனைகள் மற்றும் உடனடி அவசர அழைப்புகள்",
+  "settings.privacy": "தனியுரிமை",
+  "settings.visible": "மற்றவர்கள் பார்க்கக்கூடியவை",
+  "settings.visibleHint": "பெயர், இரத்தப் பிரிவு, ஒவ்வாமை, மருந்துகள் மற்றும் தொடர்புகள் மட்டும்",
+  "settings.checkin": "பாதுகாப்பு சரிபார்ப்பு",
+  "settings.periodic": "குறிப்பிட்ட நேர பாதுகாப்பு சரிபார்ப்பு",
+  "settings.periodicHint": "பதிலளிக்காவிட்டால் அலாரம் ஒலித்து குடும்பத்தினருக்கு தெரிவிக்கப்படும்",
+  "settings.every": "சரிபார்ப்பு இடைவெளி",
+  "settings.minutes": "நிமிடங்கள்",
+  "settings.save": "சேமி",
+  "settings.logout": "வெளியேறு",
+  "settings.delete": "கணக்கை நீக்கு",
+  "settings.enabled": "பாதுகாப்பு சரிபார்ப்பு இயக்கப்பட்டது",
+  "settings.disabled": "பாதுகாப்பு சரிபார்ப்பு நிறுத்தப்பட்டது",
+
+  "scan.title": "அட்டையை ஸ்கேன் செய்",
+  "scan.subtitle": "Helth அவசர அட்டையின் QR குறியீட்டில் கேமராவைக் காட்டுங்கள்.",
+  "scan.off": "கேமரா அணைக்கப்பட்டுள்ளது",
+  "scan.start": "கேமராவை தொடங்கு",
+  "scan.scanning": "ஸ்கேன் செய்கிறது…",
+  "scan.unsupported": "இந்த உலாவியில் QR ஸ்கேன் வசதி இல்லை. அட்டை இணைப்பைத் திறக்கவும் அல்லது ID-ஐ கீழே உள்ளிடவும்.",
+  "scan.manual": "அட்டை ID-ஐ உள்ளிடவும்",
+  "scan.open": "திற",
+  "scan.invalid": "இது Helth அட்டை குறியீடு அல்ல",
+  "scan.denied": "கேமரா அனுமதி மறுக்கப்பட்டது. அனுமதிக்கவும் அல்லது அட்டை ID-ஐ உள்ளிடவும்.",
+
+  "card.emergency": "அவசரம்",
+  "card.healthCard": "சுகாதார அட்டை",
+  "card.primary": "முதன்மை தொடர்பு",
+  "card.contact": "தொடர்பு",
+  "card.noContacts": "அவசர தொடர்புகள் இன்னும் சேர்க்கப்படவில்லை.",
+  "card.ambulance": "ஆம்புலன்ஸ்",
+  "card.flipBack": "முன்பக்கத்திற்கு திருப்பவும்",
+  "card.flipContacts": "அவசர தொடர்புகளைப் பார்க்கவும்",
+
+  "sos.hold": "அவசர SOS-க்கு 2 வினாடிகள் அழுத்தவும்",
+  "sos.sending": "SOS அனுப்புகிறது…",
+  "sos.sent": "SOS அனுப்பப்பட்டது",
+  "sos.location": "உங்கள் இருப்பிடம் பெறப்பட்டது",
+  "sos.noLocation": "இருப்பிடம் கிடைக்கவில்லை — அடுத்த முறை அதை இயக்கவும்",
+  "sos.familyAlerted": "குடும்ப வட்டத்திற்கு செயலியில் தெரிவிக்கப்பட்டது",
+  "sos.noFamily": "குடும்ப வட்டம் இல்லை — குடும்பப் பகுதியில் இணைக்கவும்",
+  "sos.contacts": "உங்கள் தொடர்புகளை இப்போது அணுகுங்கள்",
+  "sos.close": "மூடி அலாரத்தை நிறுத்து",
+
+  "checkin.title": "பாதுகாப்பு சரிபார்ப்பு",
+  "checkin.question": "நீங்கள் நலமாக இருக்கிறீர்களா?",
+  "checkin.missed": "நீங்கள் சரியான நேரத்தில் பதிலளிக்கவில்லை. குடும்பத்தினருக்கு தெரிவிக்கப்பட்டது.",
+  "checkin.safeWithin": "{seconds} வினாடிகளில் ‘நான் பாதுகாப்பாக இருக்கிறேன்’ என்பதை அழுத்தவும்.",
+  "checkin.safe": "நான் பாதுகாப்பாக இருக்கிறேன்",
 };
 
 const hi: Dict = {
@@ -222,6 +352,7 @@ const hi: Dict = {
   "nav.family": "परिवार",
   "nav.blood": "रक्त",
   "nav.settings": "सेटिंग्स",
+  "nav.scan": "स्कैन",
 
   "home.hello": "नमस्ते",
   "home.finishProfile": "अपनी प्रोफ़ाइल पूरी करें",
@@ -316,11 +447,75 @@ const hi: Dict = {
 
   "settings.language": "भाषा",
   "settings.languageHint": "ऐप की भाषा चुनें",
+  "settings.title": "सेटिंग्स",
+  "settings.finishProfile": "अपनी प्रोफ़ाइल पूरी करें",
+  "settings.card": "कार्ड",
+  "settings.viewEmergency": "आपातकालीन पेज देखें",
+  "settings.responderView": "स्कैन करने पर मददगार को क्या दिखेगा",
+  "settings.share": "कार्ड लिंक साझा करें",
+  "settings.shareHint": "परिवार या डॉक्टर को भेजें",
+  "settings.profile": "प्रोफ़ाइल",
+  "settings.editProfile": "प्रोफ़ाइल बदलें",
+  "settings.editProfileHint": "अपनी चिकित्सा जानकारी अपडेट करें",
+  "settings.healthcare": "स्वास्थ्य सेवाएं",
+  "settings.doctor": "डॉक्टर से साझा करें",
+  "settings.doctorHint": "चुनी हुई जानकारी का सीमित समय वाला लिंक",
+  "settings.hospitals": "अस्पताल और एम्बुलेंस",
+  "settings.hospitalsHint": "सहेजे अस्पताल और एक टैप में आपातकालीन कॉल",
+  "settings.privacy": "गोपनीयता",
+  "settings.visible": "दूसरे क्या देख सकते हैं",
+  "settings.visibleHint": "केवल नाम, ब्लड ग्रुप, एलर्जी, दवाएं और संपर्क",
+  "settings.checkin": "सुरक्षा चेक-इन",
+  "settings.periodic": "समय-समय पर ‘क्या आप सुरक्षित हैं?’ जांच",
+  "settings.periodicHint": "जवाब न देने पर अलार्म बजेगा और परिवार को सूचना मिलेगी",
+  "settings.every": "हर इतने समय में जांच",
+  "settings.minutes": "मिनट",
+  "settings.save": "सहेजें",
+  "settings.logout": "लॉग आउट",
+  "settings.delete": "खाता हटाएं",
+  "settings.enabled": "सुरक्षा चेक-इन चालू है",
+  "settings.disabled": "सुरक्षा चेक-इन बंद है",
+
+  "scan.title": "कार्ड स्कैन करें",
+  "scan.subtitle": "कैमरा किसी Helth आपातकालीन कार्ड के QR कोड पर रखें।",
+  "scan.off": "कैमरा बंद है",
+  "scan.start": "कैमरा चालू करें",
+  "scan.scanning": "स्कैन हो रहा है…",
+  "scan.unsupported": "यह ब्राउज़र QR कोड स्कैन नहीं कर सकता। कार्ड लिंक खोलें या नीचे कार्ड ID डालें।",
+  "scan.manual": "या कार्ड ID डालें",
+  "scan.open": "खोलें",
+  "scan.invalid": "यह Helth कार्ड का कोड नहीं है",
+  "scan.denied": "कैमरा अनुमति नहीं मिली। अनुमति दें या नीचे कार्ड ID डालें।",
+
+  "card.emergency": "आपातकाल",
+  "card.healthCard": "स्वास्थ्य कार्ड",
+  "card.primary": "मुख्य संपर्क",
+  "card.contact": "संपर्क",
+  "card.noContacts": "अभी कोई आपातकालीन संपर्क नहीं जोड़ा गया।",
+  "card.ambulance": "एम्बुलेंस",
+  "card.flipBack": "सामने की ओर पलटें",
+  "card.flipContacts": "आपातकालीन संपर्क देखें",
+
+  "sos.hold": "आपातकालीन SOS के लिए 2 सेकंड दबाएं",
+  "sos.sending": "SOS भेजा जा रहा है…",
+  "sos.sent": "SOS भेजा गया",
+  "sos.location": "आपका स्थान मिल गया",
+  "sos.noLocation": "स्थान नहीं मिला — अगली बार स्थान चालू करें",
+  "sos.familyAlerted": "आपके परिवार को ऐप में सूचना दी गई",
+  "sos.noFamily": "परिवार मंडली नहीं है — परिवार भाग में जोड़ें",
+  "sos.contacts": "अपने संपर्कों से अभी जुड़ें",
+  "sos.close": "बंद करें और अलार्म रोकें",
+
+  "checkin.title": "सुरक्षा चेक-इन",
+  "checkin.question": "क्या आप ठीक हैं?",
+  "checkin.missed": "आपने समय पर जवाब नहीं दिया। आपके परिवार को सूचना दी गई है।",
+  "checkin.safeWithin": "{seconds} सेकंड में ‘मैं सुरक्षित हूं’ दबाएं।",
+  "checkin.safe": "मैं सुरक्षित हूं",
 };
 
 const dicts: Record<Lang, Dict> = { en, ta, hi };
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: string) => string };
+type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: string, values?: Record<string, string | number>) => string };
 
 const LanguageContext = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => en[k] ?? k });
 
@@ -338,7 +533,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = next;
   }, []);
 
-  const t = useCallback((key: string) => dicts[lang][key] ?? en[key] ?? key, [lang]);
+  const t = useCallback((key: string, values?: Record<string, string | number>) => {
+    const value = dicts[lang][key] ?? en[key] ?? key;
+    return Object.entries(values ?? {}).reduce(
+      (result, [name, replacement]) => result.replaceAll(`{${name}}`, String(replacement)),
+      value,
+    );
+  }, [lang]);
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>{children}</LanguageContext.Provider>
