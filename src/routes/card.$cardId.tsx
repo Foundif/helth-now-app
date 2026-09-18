@@ -8,12 +8,10 @@ import {
   Pill,
   Activity,
   Loader2,
-  Sparkles,
   Pencil,
 } from "lucide-react";
 import { useHelth } from "@/lib/helth-store";
 import { getEmergencyCard, type PublicEmergencyCard } from "@/lib/emergency-card.functions";
-import { getEmergencySummary } from "@/lib/ai-summary.functions";
 import { shareCard } from "@/lib/card-utils";
 import { toast } from "sonner";
 
@@ -49,24 +47,6 @@ function EmergencyPage() {
   });
 
   const card: PublicEmergencyCard | null = cardQuery.data ?? null;
-
-  const summaryQuery = useQuery({
-    queryKey: ["emergency-summary", card?.cardId, card?.updatedAt],
-    enabled: Boolean(card),
-    staleTime: 10 * 60 * 1000,
-    retry: false,
-    queryFn: () =>
-      getEmergencySummary({
-        data: {
-          holderName: card!.holderName,
-          bloodGroup: card!.bloodGroup,
-          allergies: card!.allergies,
-          medications: card!.medications,
-          conditions: card!.conditions,
-          contactCount: card!.contacts.length,
-        },
-      }),
-  });
 
   if (cardQuery.isLoading && !card) {
     return (
@@ -168,29 +148,6 @@ function EmergencyPage() {
             <Phone className="size-4" /> Call 112
           </a>
         </div>
-
-        <section className="rounded-xl border border-primary/25 bg-accent px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-bold text-primary">
-            <Sparkles className="size-4" /> AI emergency summary
-          </h2>
-          {summaryQuery.isLoading ? (
-            <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" /> Preparing briefing…
-            </p>
-          ) : summaryQuery.data?.summary ? (
-            <p className="mt-2 text-sm leading-relaxed">{summaryQuery.data.summary}</p>
-          ) : (
-            <div className="mt-2 text-sm text-muted-foreground">
-              {summaryQuery.data?.error ?? "Summary unavailable."}
-              <button
-                onClick={() => summaryQuery.refetch()}
-                className="ml-2 font-semibold text-primary"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-        </section>
 
         <section>
           <h2 className="text-sm font-bold">EMERGENCY Contacts</h2>
