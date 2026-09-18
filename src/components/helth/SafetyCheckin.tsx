@@ -53,6 +53,7 @@ export function SafetyCheckin() {
     dueTimerRef.current = window.setTimeout(() => {
       setPhase("asking");
       setGraceLeft(10);
+      vibrate([200, 100, 200]); // buzz when the check-in prompt appears
     }, delay);
 
     return () => {
@@ -75,6 +76,8 @@ export function SafetyCheckin() {
     graceTimerRef.current = window.setTimeout(() => {
       setPhase("alarm");
       startAlarm();
+      vibrate([500, 200, 500, 200, 500]); // missed check-in: alarm + long buzz
+
       if (session) {
         void reportMissedCheckin({ data: { cardId: session.cardId, phone: session.phone } });
       }
