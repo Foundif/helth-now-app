@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title">
+  <title>Emergency response scene</title>
+  <rect width="640" height="360" fill="#17221f"/>
+  <path d="M0 286 180 224l144 38 152-57 164 50v105H0Z" fill="#243631"/>
+  <path d="m58 360 192-136 106 34L478 360Z" fill="#dbe6dc" opacity=".9"/>
+  <path d="m278 244 42 12-35 104h-48Z" fill="#f4b942"/>
+  <circle cx="458" cy="124" r="68" fill="#f4b942" opacity=".16"/>
+  <circle cx="458" cy="124" r="42" fill="#f4b942" opacity=".2"/>
+  <path d="M432 122h52M458 96v52" stroke="#f4b942" stroke-width="12" stroke-linecap="round"/>
+  <path d="M112 245c24-50 70-74 116-51 33 16 48 51 24 82-28 36-108 38-140-31Z" fill="#e85d5d"/>
+  <circle cx="146" cy="190" r="25" fill="#f4b942"/>
+  <path d="M164 244h102M188 224l-28 56M228 225l30 56" stroke="#f4b942" stroke-width="16" stroke-linecap="round"/>
+</svg>

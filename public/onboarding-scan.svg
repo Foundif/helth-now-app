@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title">
+  <title>Scanning an emergency health card</title>
+  <rect width="640" height="360" fill="#17221f"/>
+  <rect x="118" y="56" width="250" height="248" rx="22" fill="#f4b942"/>
+  <rect x="146" y="86" width="194" height="26" rx="13" fill="#17221f" opacity=".9"/>
+  <rect x="146" y="134" width="116" height="82" rx="8" fill="#fff7df"/>
+  <path d="M164 150h28v28h-28zM216 150h28v28h-28zM164 192h28v28h-28zM216 192h28v28h-28z" fill="#17221f"/>
+  <path d="M416 84v192M368 132h192M368 228h192" stroke="#f4b942" stroke-width="8" opacity=".7"/>
+  <path d="m408 103 28-28M520 75l28 28M408 257l28 28M520 285l28-28" stroke="#e85d5d" stroke-width="12" stroke-linecap="round"/>
+  <path d="M386 180h156" stroke="#fff7df" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="466" cy="180" r="18" fill="#e85d5d"/>
+</svg>

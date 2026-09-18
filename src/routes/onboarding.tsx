@@ -35,10 +35,11 @@ function Illustration({ children }: { children: ReactNode }) {
 const slides: ReactNode[] = [
   <>
     <Illustration>
-      <div className="relative flex size-28 items-center justify-center rounded-full bg-primary/15">
-        <div className="absolute inset-0 animate-ping rounded-full bg-primary/10" />
-        <Siren className="relative size-14 text-primary" strokeWidth={1.75} />
-      </div>
+      <img
+        src="/onboarding-accident.png"
+        alt="Motorcycle accident with emergency response notification"
+        className="h-full w-full object-cover"
+      />
     </Illustration>
     <div className="rounded-xl border border-primary/25 bg-accent px-4 py-4 text-center">
       <p className="text-sm font-bold text-primary">ACCIDENT AT JUNCTION</p>
@@ -58,10 +59,11 @@ const slides: ReactNode[] = [
   </>,
   <>
     <Illustration>
-      <div className="flex items-center gap-3">
-        <QrCode className="size-16 text-primary" strokeWidth={1.5} />
-        <ScanLine className="size-10 text-ink-foreground/70" strokeWidth={1.5} />
-      </div>
+      <img
+        src="/onboarding-scan.png"
+        alt="Emergency health card being scanned with a phone"
+        className="h-full w-full object-cover"
+      />
     </Illustration>
     <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center text-muted-foreground">
       Scan takes 5 seconds. No app needed. No login. Works on any phone.
