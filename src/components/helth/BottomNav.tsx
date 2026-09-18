@@ -1,19 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { Home, BookMarked, ScanLine, Users, Droplet, Settings } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const items = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/locker", label: "Locker", icon: BookMarked },
-  { to: "/scan", label: "Scan", icon: ScanLine },
-  { to: "/family", label: "Family", icon: Users },
-  { to: "/blood", label: "Blood", icon: Droplet },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/", labelKey: "nav.home", icon: Home },
+  { to: "/locker", labelKey: "nav.locker", icon: BookMarked },
+  { to: "/scan", labelKey: "nav.scan", icon: ScanLine },
+  { to: "/family", labelKey: "nav.family", icon: Users },
+  { to: "/blood", labelKey: "nav.blood", icon: Droplet },
+  { to: "/settings", labelKey: "nav.settings", icon: Settings },
 ] as const;
 
 export function BottomNav() {
+  const { t } = useI18n();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-      {items.map(({ to, label, icon: Icon }) => (
+      {items.map(({ to, labelKey, icon: Icon }) => (
         <Link
           key={to}
           to={to}
@@ -22,7 +24,7 @@ export function BottomNav() {
           activeProps={{ className: "!text-primary" }}
         >
           <Icon className="size-5" strokeWidth={2} />
-          {label}
+          {t(labelKey)}
         </Link>
       ))}
     </nav>

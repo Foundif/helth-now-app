@@ -59,6 +59,33 @@ export function startAlarm() {
   }
 }
 
+/** Plays a short confirmation tone after a QR code is read. */
+export function playScanSuccess() {
+  try {
+    const AudioCtx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const scanContext = new AudioCtx();
+    const scanGain = scanContext.createGain();
+    scanGain.gain.setValueAtTime(0.0001, scanContext.currentTime);
+    scanGain.gain.exponentialRampToValueAtTime(0.22, scanContext.currentTime + 0.015);
+    scanGain.gain.exponentialRampToValueAtTime(0.0001, scanContext.currentTime + 0.24);
+    scanGain.connect(scanContext.destination);
+    [880, 1320].forEach((frequency, index) => {
+      const tone = scanContext.createOscillator();
+      tone.type = "sine";
+      tone.frequency.value = frequency;
+      tone.connect(scanGain);
+      tone.start(scanContext.currentTime + index * 0.08);
+      tone.stop(scanContext.currentTime + 0.16 + index * 0.08);
+    });
+    window.setTimeout(() => void scanContext.close(), 400);
+    navigator.vibrate?.(80);
+  } catch {
+    // Audio or vibration is unavailable.
+  }
+}
+
 /** Stops the alarm and releases audio resources. Safe to call even if not running. */
 export function stopAlarm() {
   if (beepTimer !== null) {
