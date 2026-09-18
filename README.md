@@ -8,6 +8,10 @@ The app uses Supabase for database, authentication, storage, and server-side dat
 
 You need Node.js and npm.
 
+For AI summaries, configure `GEMINI_API_KEY` in the server environment. The app uses
+`gemini-2.5-flash` by default; set `GEMINI_MODEL` to override it. Keep the key server-side
+and configure it in Vercel for Production, Preview, and Development environments.
+
 ```sh
 git clone <this-repository-url>
 cd <repository-name>

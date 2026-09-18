@@ -25,7 +25,7 @@ function clean(input: SummaryInput): SummaryInput {
 export const getEmergencySummary = createServerFn({ method: "POST" })
   .inputValidator((input: SummaryInput) => clean(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env["OPENAI_API_KEY"];
+    const apiKey = process.env["GEMINI_API_KEY"];
     if (!apiKey) return { summary: "", error: "AI summary is not configured." };
 
     const prompt = [
@@ -42,52 +42,32 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
     ].join("\n");
 
     try {
-      const response = await fetch(process.env["OPENAI_RESPONSES_URL"] ?? "https://api.openai.com/v1/responses", {
+      const model = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: process.env["OPENAI_MODEL"] ?? "gpt-4o-mini",
-          input: prompt,
-          stream: true,
-          reasoning: { effort: "low", summary: "auto" },
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 180 },
         }),
-      });
+        },
+      );
 
       if (!response.ok) {
         const body = await response.text();
         console.error(`AI summary failed [${response.status}]: ${body}`);
-        if (response.status === 402) return { summary: "", error: "AI credits exhausted." };
+        if (response.status === 429) return { summary: "", error: "AI rate limit reached." };
         return { summary: "", error: "AI summary is unavailable right now." };
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) return { summary: "", error: "AI summary is unavailable right now." };
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let text = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (!payload || payload === "[DONE]") continue;
-          try {
-            const event = JSON.parse(payload) as { type?: string; delta?: string };
-            if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
-              text += event.delta;
-            }
-          } catch {
-            // ignore partial frames
-          }
-        }
-      }
+      const payload = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
       return { summary: text.trim(), error: text.trim() ? "" : "No summary was generated." };
     } catch (error) {
       console.error("AI summary error", error);

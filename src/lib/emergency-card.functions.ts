@@ -43,25 +43,13 @@ export const getEmergencyCard = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }): Promise<PublicEmergencyCard | null> => {
     if (!cardPattern.test(data.cardId)) return null;
-    const url = process.env["SUPABASE_URL"];
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
-    if (!url || !key) throw new Error("Emergency card service is unavailable");
-    const response = await fetch(
-      `${url}/rest/v1/emergency_cards?card_id=eq.${encodeURIComponent(data.cardId)}&select=card_id,holder_name,blood_group,allergies,medications,conditions,contacts,updated_at`,
-      { headers: { apikey: key, Accept: "application/json" } },
-    );
-    if (!response.ok) throw new Error("Could not load emergency card");
-    const rows = (await response.json()) as Array<{
-      card_id: string;
-      holder_name: string;
-      blood_group: string;
-      allergies: string[];
-      medications: string[];
-      conditions: string[];
-      contacts: PublicContact[];
-      updated_at: string;
-    }>;
-    const row = rows[0];
+    const db = await admin();
+    const { data: row, error } = await db
+      .from("emergency_cards")
+      .select("card_id,holder_name,blood_group,allergies,medications,conditions,contacts,updated_at")
+      .eq("card_id", data.cardId)
+      .maybeSingle();
+    if (error) throw new Error("Could not load emergency card");
     if (!row || !row.holder_name) return null;
 
     if (data.viewerCardId !== data.cardId) {

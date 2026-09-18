@@ -23,7 +23,7 @@ const empty: DocSummary = { overview: "", keyPoints: [], timeline: [], advice: "
 export const summarizeDocument = createServerFn({ method: "POST" })
   .inputValidator((input: { cardId: string; phone: string; id: string }) => input)
   .handler(async ({ data }): Promise<DocSummary> => {
-    const apiKey = process.env["OPENAI_API_KEY"];
+    const apiKey = process.env["GEMINI_API_KEY"];
     if (!apiKey) return { ...empty, error: "AI summaries are not configured." };
 
     const { db, row } = await requireOwner(data.cardId, data.phone);
@@ -66,94 +66,60 @@ export const summarizeDocument = createServerFn({ method: "POST" })
     ].join(" ");
 
     try {
-      const response = await fetch(process.env["OPENAI_RESPONSES_URL"] ?? "https://api.openai.com/v1/responses", {
+      const model = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: process.env["OPENAI_MODEL"] ?? "gpt-4o-mini",
-          stream: true,
-          reasoning: { effort: "low", summary: "auto" },
-          input: [
-            {
-              role: "user",
-              content: [
-                { type: "input_text", text: instruction },
-                isImage
-                  ? { type: "input_image", image_url: `data:${mime};base64,${base64}` }
-                  : {
-                      type: "input_file",
-                      filename: doc.name.endsWith(".pdf") ? doc.name : `${doc.name}.pdf`,
-                      file_data: `data:${mime};base64,${base64}`,
-                    },
-              ],
-            },
-          ],
-          text: {
-            format: {
-              type: "json_schema",
-              name: "document_summary",
-              strict: true,
-              schema: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  overview: { type: "string" },
-                  keyPoints: { type: "array", items: { type: "string" } },
-                  timeline: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: { when: { type: "string" }, what: { type: "string" } },
-                      required: ["when", "what"],
-                    },
+          contents: [{
+            role: "user",
+            parts: [
+              { text: instruction },
+              { inlineData: { mimeType: mime, data: base64 } },
+            ],
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                overview: { type: "STRING" },
+                keyPoints: { type: "ARRAY", items: { type: "STRING" } },
+                timeline: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: { when: { type: "STRING" }, what: { type: "STRING" } },
+                    required: ["when", "what"],
                   },
-                  advice: { type: "string" },
                 },
-                required: ["overview", "keyPoints", "timeline", "advice"],
+                advice: { type: "STRING" },
               },
+              required: ["overview", "keyPoints", "timeline", "advice"],
             },
           },
         }),
-      });
+        },
+      );
 
       if (!response.ok) {
         const body = await response.text();
         console.error(`Doc summary failed [${response.status}]: ${body}`);
-        if (response.status === 402) return { ...empty, error: "AI credits exhausted." };
+        if (response.status === 429) return { ...empty, error: "Too many requests — try again in a minute." };
         if (response.status === 429)
           return { ...empty, error: "Too many requests — try again in a minute." };
         return { ...empty, error: "AI summary is unavailable right now." };
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) return { ...empty, error: "AI summary is unavailable right now." };
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let text = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (!payload || payload === "[DONE]") continue;
-          try {
-            const event = JSON.parse(payload) as { type?: string; delta?: string };
-            if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
-              text += event.delta;
-            }
-          } catch {
-            // partial frame
-          }
-        }
-      }
+      const payload = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
       if (!text.trim()) return { ...empty, error: "No summary was generated." };
       const parsed = JSON.parse(text) as DocSummary;
