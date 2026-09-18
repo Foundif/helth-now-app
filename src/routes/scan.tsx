@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Loader2, ScanLine } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
-import { playBeep } from "@/lib/alarm-sound";
+import { playScanSuccess } from "@/lib/alarm-sound";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/scan")({
@@ -53,7 +53,7 @@ function ScanPage() {
         toast.error("That code is not a Helth card");
         return false;
       }
-      playBeep();
+      playScanSuccess();
       streamRef.current?.getTracks().forEach((t) => t.stop());
       navigate({ to: "/card/$cardId", params: { cardId } });
       return true;

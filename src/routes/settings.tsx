@@ -11,6 +11,7 @@ import {
   Loader2,
   Stethoscope,
   Siren,
+  Languages,
 } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
 import { useRequireCompleteProfile } from "@/lib/use-session";
@@ -18,6 +19,7 @@ import { deleteAccount } from "@/lib/helth.functions";
 import { getCheckinSettings, setCheckinSettings } from "@/lib/checkin.functions";
 import { shareCard } from "@/lib/card-utils";
 import { Switch } from "@/components/ui/switch";
+import { LANGUAGES, useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -42,6 +44,7 @@ function SettingsPage() {
   const { session, update, profileQuery } = useRequireCompleteProfile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { lang, setLang } = useI18n();
   const [busy, setBusy] = useState(false);
 
   const profile = profileQuery.data;
@@ -151,6 +154,30 @@ function SettingsPage() {
                 sub="Update your medical details"
               />
             </Link>
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-2 text-sm font-bold text-muted-foreground">Language</p>
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+            <span className="rounded-lg bg-muted p-2">
+              <Languages className="size-5 text-primary" />
+            </span>
+            <div className="flex flex-1 gap-2">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code)}
+                  className={`flex-1 rounded-lg border px-2 py-2 text-xs font-bold ${
+                    lang === l.code
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border"
+                  }`}
+                >
+                  {l.native}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
