@@ -25,7 +25,7 @@ function clean(input: SummaryInput): SummaryInput {
 export const getEmergencySummary = createServerFn({ method: "POST" })
   .inputValidator((input: SummaryInput) => clean(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env["OPENROUTER_API_KEY"];
+    const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { summary: "", error: "AI summary is not configured." };
 
     const prompt = [
@@ -42,35 +42,33 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
     ].join("\n");
 
     try {
-      const model = process.env["OPENROUTER_MODEL"] ?? "inclusionai/ling-3.0-flash-vl:free";
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          "HTTP-Referer": process.env["OPENROUTER_SITE_URL"] ?? "https://helthnow.vercel.app",
-          "X-Title": "Helth Emergency Health Card",
+          "Lovable-API-Key": apiKey,
+          "X-Lovable-AIG-SDK": "fetch",
         },
         body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.2,
-          max_tokens: 180,
+          model: process.env["LOVABLE_MODEL"] ?? "openai/gpt-4o-mini",
+          input: prompt,
+          stream: false,
         }),
       });
 
       if (!response.ok) {
         const body = await response.text();
         console.error(`AI summary failed [${response.status}]: ${body}`);
+        if (response.status === 402) return { summary: "", error: "AI credits exhausted." };
         if (response.status === 429) return { summary: "", error: "AI rate limit reached." };
         return { summary: "", error: "AI summary is unavailable right now." };
       }
 
       const payload = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
+        output_text?: string;
+        output?: Array<{ content?: Array<{ text?: string }> }>;
       };
-      const content = payload.choices?.[0]?.message?.content;
-      const text = typeof content === "string" ? content : content?.map((part) => part.text ?? "").join("") ?? "";
+      const text = payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).map((part) => part.text ?? "").join("") ?? "";
       return { summary: text.trim(), error: text.trim() ? "" : "No summary was generated." };
     } catch (error) {
       console.error("AI summary error", error);

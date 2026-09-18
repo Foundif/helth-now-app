@@ -23,7 +23,7 @@ const empty: DocSummary = { overview: "", keyPoints: [], timeline: [], advice: "
 export const summarizeDocument = createServerFn({ method: "POST" })
   .inputValidator((input: { cardId: string; phone: string; id: string }) => input)
   .handler(async ({ data }): Promise<DocSummary> => {
-    const apiKey = process.env["OPENROUTER_API_KEY"];
+    const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { ...empty, error: "AI summaries are not configured." };
 
     const { db, row } = await requireOwner(data.cardId, data.phone);
@@ -66,32 +66,28 @@ export const summarizeDocument = createServerFn({ method: "POST" })
     ].join(" ");
 
     try {
-      const model = process.env["OPENROUTER_MODEL"] ?? "inclusionai/ling-3.0-flash-vl:free";
-      const documentPart = isImage
-        ? { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } }
-        : {
-            type: "file",
-            file: {
-              filename: doc.name.endsWith(".pdf") ? doc.name : `${doc.name}.pdf`,
-              file_data: `data:${mime};base64,${base64}`,
-            },
-          };
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          "HTTP-Referer": process.env["OPENROUTER_SITE_URL"] ?? "https://helthnow.vercel.app",
-          "X-Title": "Helth Emergency Health Card",
+          "Lovable-API-Key": apiKey,
+          "X-Lovable-AIG-SDK": "fetch",
         },
         body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: [{ type: "text", text: instruction }, documentPart] }],
-          temperature: 0.1,
-          max_tokens: 1200,
-          response_format: {
-            type: "json_schema",
-            json_schema: {
+          model: process.env["LOVABLE_MODEL"] ?? "openai/gpt-4o-mini",
+          stream: false,
+          input: [{
+            role: "user",
+            content: [
+              { type: "input_text", text: instruction },
+              isImage
+                ? { type: "input_image", image_url: `data:${mime};base64,${base64}` }
+                : { type: "input_file", filename: doc.name, file_data: `data:${mime};base64,${base64}` },
+            ],
+          }],
+          text: {
+            format: {
+              type: "json_schema",
               name: "document_summary",
               strict: true,
               schema: {
@@ -100,15 +96,7 @@ export const summarizeDocument = createServerFn({ method: "POST" })
                 properties: {
                   overview: { type: "string" },
                   keyPoints: { type: "array", items: { type: "string" } },
-                  timeline: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: { when: { type: "string" }, what: { type: "string" } },
-                      required: ["when", "what"],
-                    },
-                  },
+                  timeline: { type: "array", items: { type: "object", properties: { when: { type: "string" }, what: { type: "string" } }, required: ["when", "what"] } },
                   advice: { type: "string" },
                 },
                 required: ["overview", "keyPoints", "timeline", "advice"],
@@ -121,15 +109,16 @@ export const summarizeDocument = createServerFn({ method: "POST" })
       if (!response.ok) {
         const body = await response.text();
         console.error(`Doc summary failed [${response.status}]: ${body}`);
+        if (response.status === 402) return { ...empty, error: "AI credits exhausted." };
         if (response.status === 429) return { ...empty, error: "Too many requests — try again in a minute." };
         return { ...empty, error: "AI summary is unavailable right now." };
       }
 
       const payload = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
+        output_text?: string;
+        output?: Array<{ content?: Array<{ text?: string }> }>;
       };
-      const content = payload.choices?.[0]?.message?.content;
-      const text = typeof content === "string" ? content : content?.map((part) => part.text ?? "").join("") ?? "";
+      const text = payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).map((part) => part.text ?? "").join("") ?? "";
 
       if (!text.trim()) return { ...empty, error: "No summary was generated." };
       const parsed = JSON.parse(text) as DocSummary;
