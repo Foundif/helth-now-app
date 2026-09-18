@@ -42,7 +42,7 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
     ].join("\n");
 
     try {
-      const model = process.env["OPENROUTER_MODEL"] ?? "google/gemini-2.0-flash-exp:free";
+      const model = process.env["OPENROUTER_MODEL"] ?? "inclusionai/ling-3.0-flash-vl:free";
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {

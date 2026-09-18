@@ -66,7 +66,7 @@ export const summarizeDocument = createServerFn({ method: "POST" })
     ].join(" ");
 
     try {
-      const model = process.env["OPENROUTER_MODEL"] ?? "google/gemini-2.0-flash-exp:free";
+      const model = process.env["OPENROUTER_MODEL"] ?? "inclusionai/ling-3.0-flash-vl:free";
       const documentPart = isImage
         ? { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } }
         : {
