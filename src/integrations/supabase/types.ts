@@ -157,6 +157,7 @@ export type Database = {
           holder_name: string
           managed_by_card_id: string | null
           medications: string[]
+          password_hash: string
           phone: string | null
           updated_at: string
         }
@@ -170,6 +171,7 @@ export type Database = {
           holder_name?: string
           managed_by_card_id?: string | null
           medications?: string[]
+          password_hash?: string
           phone?: string | null
           updated_at?: string
         }
@@ -183,6 +185,7 @@ export type Database = {
           holder_name?: string
           managed_by_card_id?: string | null
           medications?: string[]
+          password_hash?: string
           phone?: string | null
           updated_at?: string
         }

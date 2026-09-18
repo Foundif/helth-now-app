@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert } from "lucide-react";
 import { useHelth } from "@/lib/helth-store";
 import { getCheckinSettings, confirmSafe, reportMissedCheckin } from "@/lib/checkin.functions";
-import { startAlarm, stopAlarm } from "@/lib/alarm-sound";
+import { startAlarm, stopAlarm, vibrate } from "@/lib/alarm-sound";
 
 const GRACE_MS = 10_000;
 const POLL_MS = 15_000;

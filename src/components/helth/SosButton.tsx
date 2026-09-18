@@ -13,7 +13,7 @@ import {
 import type { Contact } from "@/lib/helth.functions";
 import { sendSosAlert } from "@/lib/sos.functions";
 import { cardUrl } from "@/lib/card-utils";
-import { startAlarm, stopAlarm } from "@/lib/alarm-sound";
+import { startAlarm, stopAlarm, vibrate } from "@/lib/alarm-sound";
 import { toast } from "sonner";
 
 const HOLD_MS = 1600;
@@ -65,6 +65,7 @@ export function SosButton({
     cancelHold();
     setSending(true);
     startAlarm(); // loud siren fires immediately — draws attention while the alert sends
+    vibrate([300, 120, 300, 120, 600]); // long SOS buzz pattern alongside the siren
     try {
       const locationUrl = await getLocationUrl();
       const { notifiedFamily } = await sendSosAlert({ data: { cardId, phone, locationUrl } });
