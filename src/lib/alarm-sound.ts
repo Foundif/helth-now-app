@@ -33,6 +33,15 @@ export function startAlarm() {
   }
 }
 
+/** Short haptic buzz for confirmations and taps. Silently ignored where unsupported. */
+export function vibrate(pattern: number | number[] = 40) {
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    // vibration unavailable
+  }
+}
+
 /** Plays a short confirmation tone after a QR code is read. */
 export function playScanSuccess() {
   try {

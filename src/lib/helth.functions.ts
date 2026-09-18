@@ -24,8 +24,30 @@ export type StoredDoc = {
   url: string | null;
 };
 
-export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
-const bloodGroups = new Set([...BLOOD_GROUPS, ""]);
+export const BLOOD_GROUPS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "O+",
+  "O-",
+  "AB+",
+  "AB-",
+  "A1+",
+  "A1-",
+  "A2+",
+  "A2-",
+  "A1B+",
+  "A1B-",
+  "A2B+",
+  "A2B-",
+  "Bombay (hh)",
+  "Rh-null",
+  "Unknown",
+] as const;
+/** Everyday groups shown first in pickers; the rest are rare/unknown types. */
+export const COMMON_BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
+const bloodGroups = new Set<string>([...BLOOD_GROUPS, ""]);
 
 export function normalizePhone(raw: string) {
   const cleaned = raw.replace(/[^\d+]/g, "");
@@ -154,23 +176,119 @@ export async function createManagedCard(managerCardId: string, name: string): Pr
   return toProfile(row);
 }
 
-export const signInWithPhone = createServerFn({ method: "POST" })
+// ---- Password handling (salted SHA-256; Web Crypto works in the edge runtime) ----
+
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function hashPassword(password: string) {
+  const salt = crypto.randomUUID().replace(/-/g, "");
+  return `${salt}:${await sha256Hex(`${salt}:${password}`)}`;
+}
+
+async function passwordMatches(password: string, stored: string) {
+  const [salt, digest] = stored.split(":");
+  if (!salt || !digest) return false;
+  return (await sha256Hex(`${salt}:${password}`)) === digest;
+}
+
+function validPassword(raw: string) {
+  const password = raw.trim();
+  if (password.length < 4) throw new Error("Password must be at least 4 characters");
+  if (password.length > 72) throw new Error("Password is too long");
+  return password;
+}
+
+/** Tells the sign-in screen whether this number already has an account with a password. */
+export const lookupPhone = createServerFn({ method: "POST" })
   .inputValidator((input: { phone: string }) => ({ phone: normalizePhone(input.phone) }))
+  .handler(async ({ data }): Promise<{ registered: boolean }> => {
+    const db = await admin();
+    const { data: row, error } = await db
+      .from("emergency_cards")
+      .select("card_id, password_hash")
+      .eq("phone", data.phone)
+      .maybeSingle();
+    if (error) throw new Error("Could not check this number right now");
+    return { registered: !!row && !!row.password_hash };
+  });
+
+/**
+ * Phone + password sign-in. A new number creates the card and stores the password;
+ * an existing number must match the saved password. Legacy cards with no password
+ * yet adopt the password entered on this first sign-in.
+ */
+export const signInWithPhone = createServerFn({ method: "POST" })
+  .inputValidator((input: { phone: string; password: string }) => ({
+    phone: normalizePhone(input.phone),
+    password: validPassword(input.password),
+  }))
   .handler(async ({ data }): Promise<Profile> => {
     const db = await admin();
     const existing = await db
       .from("emergency_cards")
-      .select(COLUMNS)
+      .select(`${COLUMNS}, password_hash`)
       .eq("phone", data.phone)
       .maybeSingle();
     if (existing.error) throw new Error("Could not sign you in right now");
-    if (existing.data) return toProfile(existing.data as Row);
+
+    if (existing.data) {
+      const row = existing.data as Row & { password_hash: string | null };
+      if (row.password_hash) {
+        if (!(await passwordMatches(data.password, row.password_hash))) {
+          throw new Error("Wrong password for this number");
+        }
+      } else {
+        const { error } = await db
+          .from("emergency_cards")
+          .update({ password_hash: await hashPassword(data.password) })
+          .eq("card_id", row.card_id);
+        if (error) throw new Error("Could not save your password");
+      }
+      return toProfile(row);
+    }
+
     const row = await createCardRow(db, {
       phone: data.phone,
       holderName: "",
       managedByCardId: null,
     });
+    const { error } = await db
+      .from("emergency_cards")
+      .update({ password_hash: await hashPassword(data.password) })
+      .eq("card_id", row.card_id);
+    if (error) throw new Error("Could not save your password");
     return toProfile(row);
+  });
+
+/** Lets a signed-in owner change their password (current password required). */
+export const changePassword = createServerFn({ method: "POST" })
+  .inputValidator((input: { cardId: string; phone: string; current: string; next: string }) => ({
+    ...input,
+    next: validPassword(input.next),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { db, row } = await requireOwner(data.cardId, data.phone);
+    const { data: stored } = await db
+      .from("emergency_cards")
+      .select("password_hash")
+      .eq("card_id", row.card_id)
+      .maybeSingle();
+    const hash = stored?.password_hash ?? "";
+    if (hash && !(await passwordMatches(data.current, hash))) {
+      throw new Error("Current password is wrong");
+    }
+    const { error } = await db
+      .from("emergency_cards")
+      .update({ password_hash: await hashPassword(data.next) })
+      .eq("card_id", row.card_id);
+    if (error) throw new Error("Could not change your password");
+    return { ok: true };
   });
 
 export const getMyProfile = createServerFn({ method: "POST" })
