@@ -25,7 +25,7 @@ function clean(input: SummaryInput): SummaryInput {
 export const getEmergencySummary = createServerFn({ method: "POST" })
   .inputValidator((input: SummaryInput) => clean(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env["LOVABLE_API_KEY"];
+    const apiKey = process.env["OPENAI_API_KEY"];
     if (!apiKey) return { summary: "", error: "AI summary is not configured." };
 
     const prompt = [
@@ -42,33 +42,33 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
     ].join("\n");
 
     try {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Lovable-API-Key": apiKey,
-          "X-Lovable-AIG-SDK": "fetch",
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: process.env["LOVABLE_MODEL"] ?? "openai/gpt-4o-mini",
-          input: prompt,
-          stream: false,
+          model: process.env["OPENAI_MODEL"] ?? "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+          max_tokens: 300,
         }),
       });
 
       if (!response.ok) {
         const body = await response.text();
         console.error(`AI summary failed [${response.status}]: ${body}`);
+        if (response.status === 401) return { summary: "", error: "OpenAI API key is invalid." };
         if (response.status === 402) return { summary: "", error: "AI credits exhausted." };
         if (response.status === 429) return { summary: "", error: "AI rate limit reached." };
         return { summary: "", error: "AI summary is unavailable right now." };
       }
 
       const payload = (await response.json()) as {
-        output_text?: string;
-        output?: Array<{ content?: Array<{ text?: string }> }>;
+        choices?: Array<{ message?: { content?: string } }>;
       };
-      const text = payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).map((part) => part.text ?? "").join("") ?? "";
+      const text = payload.choices?.[0]?.message?.content ?? "";
       return { summary: text.trim(), error: text.trim() ? "" : "No summary was generated." };
     } catch (error) {
       console.error("AI summary error", error);

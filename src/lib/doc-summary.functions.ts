@@ -23,7 +23,7 @@ const empty: DocSummary = { overview: "", keyPoints: [], timeline: [], advice: "
 export const summarizeDocument = createServerFn({ method: "POST" })
   .inputValidator((input: { cardId: string; phone: string; id: string }) => input)
   .handler(async ({ data }): Promise<DocSummary> => {
-    const apiKey = process.env["LOVABLE_API_KEY"];
+    const apiKey = process.env["OPENAI_API_KEY"];
     if (!apiKey) return { ...empty, error: "AI summaries are not configured." };
 
     const { db, row } = await requireOwner(data.cardId, data.phone);
@@ -66,25 +66,25 @@ export const summarizeDocument = createServerFn({ method: "POST" })
     ].join(" ");
 
     try {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Lovable-API-Key": apiKey,
-          "X-Lovable-AIG-SDK": "fetch",
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: process.env["LOVABLE_MODEL"] ?? "openai/gpt-4o-mini",
-          stream: false,
-          input: [{
+          model: process.env["OPENAI_MODEL"] ?? "gpt-4o-mini",
+          messages: [{
             role: "user",
             content: [
-              { type: "input_text", text: instruction },
+              { type: "text", text: instruction },
               isImage
-                ? { type: "input_image", image_url: `data:${mime};base64,${base64}` }
-                : { type: "input_file", filename: doc.name, file_data: `data:${mime};base64,${base64}` },
+                ? { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } }
+                : { type: "file", file: { filename: doc.name, file_data: `data:${mime};base64,${base64}` } },
             ],
           }],
+          temperature: 0.1,
+          max_tokens: 1800,
           text: {
             format: {
               type: "json_schema",
@@ -109,16 +109,16 @@ export const summarizeDocument = createServerFn({ method: "POST" })
       if (!response.ok) {
         const body = await response.text();
         console.error(`Doc summary failed [${response.status}]: ${body}`);
+        if (response.status === 401) return { ...empty, error: "OpenAI API key is invalid." };
         if (response.status === 402) return { ...empty, error: "AI credits exhausted." };
         if (response.status === 429) return { ...empty, error: "Too many requests — try again in a minute." };
         return { ...empty, error: "AI summary is unavailable right now." };
       }
 
       const payload = (await response.json()) as {
-        output_text?: string;
-        output?: Array<{ content?: Array<{ text?: string }> }>;
+        choices?: Array<{ message?: { content?: string } }>;
       };
-      const text = payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).map((part) => part.text ?? "").join("") ?? "";
+      const text = payload.choices?.[0]?.message?.content ?? "";
 
       if (!text.trim()) return { ...empty, error: "No summary was generated." };
       const parsed = JSON.parse(text) as DocSummary;

@@ -8,8 +8,8 @@ The app uses Supabase for database, authentication, storage, and server-side dat
 
 You need Node.js and npm.
 
-For AI summaries, configure `LOVABLE_API_KEY` in the server environment. The app uses
-`openai/gpt-4o-mini` through the Lovable AI gateway by default; set `LOVABLE_MODEL` to override it. Keep the key server-side
+For AI summaries, configure `OPENAI_API_KEY` in the server environment. The app uses
+`gpt-4o-mini` through the OpenAI API by default; set `OPENAI_MODEL` to override it. Keep the key server-side
 and configure it in Vercel for Production, Preview, and Development environments.
 
 ```sh
