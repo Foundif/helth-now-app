@@ -1,3 +1,29 @@
+/** Short, pleasant confirmation beep (e.g. a successful QR scan). Distinct from the alarm siren. */
+export function playBeep() {
+  try {
+    const AudioCtx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const beepCtx = new AudioCtx();
+    const osc = beepCtx.createOscillator();
+    const gain = beepCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.3, beepCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, beepCtx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(beepCtx.destination);
+    osc.start();
+    osc.stop(beepCtx.currentTime + 0.15);
+    osc.onended = () => {
+      gain.disconnect();
+      osc.disconnect();
+      void beepCtx.close();
+    };
+  } catch {
+    // Web Audio unavailable — nothing more we can do here.
+  }
+}
 let ctx: AudioContext | null = null;
 let oscillator: OscillatorNode | null = null;
 let gainNode: GainNode | null = null;

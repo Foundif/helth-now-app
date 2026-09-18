@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import {
   AlertTriangle,
   Loader2,
@@ -7,11 +7,13 @@ import {
   Phone,
   MessageCircle,
   Users,
+  VolumeX,
   X,
 } from "lucide-react";
 import type { Contact } from "@/lib/helth.functions";
 import { sendSosAlert } from "@/lib/sos.functions";
 import { cardUrl } from "@/lib/card-utils";
+import { startAlarm, stopAlarm } from "@/lib/alarm-sound";
 import { toast } from "sonner";
 
 const HOLD_MS = 1600;
@@ -57,9 +59,12 @@ export function SosButton({
     setProgress(0);
   };
 
+  useEffect(() => stopAlarm, []); // stop the siren if this ever unmounts (e.g. navigating away)
+
   const activate = async () => {
     cancelHold();
     setSending(true);
+    startAlarm(); // loud siren fires immediately — draws attention while the alert sends
     try {
       const locationUrl = await getLocationUrl();
       const { notifiedFamily } = await sendSosAlert({ data: { cardId, phone, locationUrl } });
@@ -132,10 +137,23 @@ export function SosButton({
               <h2 className="flex items-center gap-2 text-lg font-extrabold text-destructive">
                 <AlertTriangle className="size-5" /> SOS sent
               </h2>
-              <button onClick={() => setResult(null)} aria-label="Close">
+              <button
+                onClick={() => {
+                  stopAlarm();
+                  setResult(null);
+                }}
+                aria-label="Close"
+              >
                 <X className="size-5" />
               </button>
             </div>
+
+            <button
+              onClick={stopAlarm}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-destructive-foreground"
+            >
+              <VolumeX className="size-4" /> Stop alarm sound
+            </button>
 
             <div className="mt-3 flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm">
               {result.locationUrl ? (

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Loader2, ScanLine } from "lucide-react";
 import { BottomNav } from "@/components/helth/BottomNav";
+import { playBeep } from "@/lib/alarm-sound";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/scan")({
@@ -52,6 +53,7 @@ function ScanPage() {
         toast.error("That code is not a Helth card");
         return false;
       }
+      playBeep();
       streamRef.current?.getTracks().forEach((t) => t.stop());
       navigate({ to: "/card/$cardId", params: { cardId } });
       return true;
@@ -75,8 +77,9 @@ function ScanPage() {
       await video.play();
       setStatus("scanning");
 
-      const Ctor = (window as unknown as { BarcodeDetector: new (o: { formats: string[] }) => Detector })
-        .BarcodeDetector;
+      const Ctor = (
+        window as unknown as { BarcodeDetector: new (o: { formats: string[] }) => Detector }
+      ).BarcodeDetector;
       const detector = new Ctor({ formats: ["qr_code"] });
 
       const tick = async () => {
@@ -116,9 +119,7 @@ function ScanPage() {
               ) : (
                 <ScanLine className="size-12 text-muted-foreground" strokeWidth={1.2} />
               )}
-              <p className="px-6 text-sm text-muted-foreground">
-                {message || "Camera is off"}
-              </p>
+              <p className="px-6 text-sm text-muted-foreground">{message || "Camera is off"}</p>
             </div>
           )}
           {status === "scanning" && (

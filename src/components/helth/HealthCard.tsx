@@ -96,14 +96,14 @@ export function HealthCard({
             <Cross className="size-8 shrink-0 fill-primary text-primary" strokeWidth={3} />
           </div>
 
-          <div className="flex-1 px-3 py-1">
+          <div className="flex-1 overflow-hidden px-3 py-1">
             {contacts.length === 0 ? (
               <p className="text-xs text-muted-foreground italic">
                 No emergency contacts added yet.
               </p>
             ) : (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {contacts.map((c, i) => (
+              <div className="grid grid-cols-2 gap-x-3">
+                {contacts.slice(0, 2).map((c, i) => (
                   <div key={c.id} className="min-w-0">
                     <p className="truncate text-[8px] font-bold tracking-wide text-primary">
                       {i === 0 ? "PRIMARY CONTACT" : (c.relation || "CONTACT").toUpperCase()}
