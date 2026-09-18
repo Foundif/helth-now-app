@@ -24,8 +24,30 @@ export type StoredDoc = {
   url: string | null;
 };
 
-export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
-const bloodGroups = new Set([...BLOOD_GROUPS, ""]);
+export const BLOOD_GROUPS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "O+",
+  "O-",
+  "AB+",
+  "AB-",
+  "A1+",
+  "A1-",
+  "A2+",
+  "A2-",
+  "A1B+",
+  "A1B-",
+  "A2B+",
+  "A2B-",
+  "Bombay (hh)",
+  "Rh-null",
+  "Unknown",
+] as const;
+/** Everyday groups shown first in pickers; the rest are rare/unknown types. */
+export const COMMON_BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
+const bloodGroups = new Set<string>([...BLOOD_GROUPS, ""]);
 
 export function normalizePhone(raw: string) {
   const cleaned = raw.replace(/[^\d+]/g, "");
