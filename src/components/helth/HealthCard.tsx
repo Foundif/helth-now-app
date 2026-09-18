@@ -117,28 +117,30 @@ export function HealthCard({
           </div>
 
           <div className="border-t border-primary/30 px-3 pt-1.5">
-            <p className="text-[8px] text-muted-foreground">
+            <p className="text-[8px] font-medium text-ink/70">
               In emergency: call number above or scan QR on front
             </p>
             <div className="mt-1 flex items-end justify-between">
               <div className="flex gap-3">
                 <span>
-                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold">
+                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold text-primary">
                     <Phone className="size-3 fill-primary text-primary" /> 108
                   </span>
-                  <span className="text-[8px] font-semibold text-primary">Ambulance</span>
+                  <span className="text-[8px] font-bold text-ink">Ambulance</span>
                 </span>
                 <span>
-                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold">
+                  <span className="flex items-center gap-1 text-sm leading-tight font-extrabold text-primary">
                     <Phone className="size-3 fill-primary text-primary" /> 112
                   </span>
-                  <span className="text-[8px] font-semibold text-primary">Emergency</span>
+                  <span className="text-[8px] font-bold text-ink">Emergency</span>
                 </span>
               </div>
+
               <div className="text-right">
                 <p className="text-xs font-extrabold text-primary">{cardId}</p>
-                <p className="truncate text-[8px] text-muted-foreground">{host}</p>
+                <p className="truncate text-[8px] font-medium text-ink/70">{host}</p>
               </div>
+
             </div>
           </div>
 
