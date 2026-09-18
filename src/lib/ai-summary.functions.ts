@@ -25,7 +25,7 @@ function clean(input: SummaryInput): SummaryInput {
 export const getEmergencySummary = createServerFn({ method: "POST" })
   .inputValidator((input: SummaryInput) => clean(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env["GEMINI_API_KEY"];
+    const apiKey = process.env["OPENROUTER_API_KEY"];
     if (!apiKey) return { summary: "", error: "AI summary is not configured." };
 
     const prompt = [
@@ -42,20 +42,22 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
     ].join("\n");
 
     try {
-      const model = process.env["GEMINI_MODEL"] ?? "gemini-3.6-flash";
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
+      const model = process.env["OPENROUTER_MODEL"] ?? "google/gemini-2.0-flash-exp:free";
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": process.env["OPENROUTER_SITE_URL"] ?? "https://helthnow.vercel.app",
+          "X-Title": "Helth Emergency Health Card",
         },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 180 },
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+          max_tokens: 180,
         }),
-        },
-      );
+      });
 
       if (!response.ok) {
         const body = await response.text();
@@ -65,9 +67,10 @@ export const getEmergencySummary = createServerFn({ method: "POST" })
       }
 
       const payload = (await response.json()) as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
       };
-      const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+      const content = payload.choices?.[0]?.message?.content;
+      const text = typeof content === "string" ? content : content?.map((part) => part.text ?? "").join("") ?? "";
       return { summary: text.trim(), error: text.trim() ? "" : "No summary was generated." };
     } catch (error) {
       console.error("AI summary error", error);

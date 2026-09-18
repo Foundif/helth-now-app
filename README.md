@@ -8,8 +8,8 @@ The app uses Supabase for database, authentication, storage, and server-side dat
 
 You need Node.js and npm.
 
-For AI summaries, configure `GEMINI_API_KEY` in the server environment. The app uses
-`gemini-3.6-flash` by default; set `GEMINI_MODEL` to override it. Keep the key server-side
+For AI summaries, configure `OPENROUTER_API_KEY` in the server environment. The app uses
+`google/gemini-2.0-flash-exp:free` by default; set `OPENROUTER_MODEL` to override it. Keep the key server-side
 and configure it in Vercel for Production, Preview, and Development environments.
 
 ```sh
